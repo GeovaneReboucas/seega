@@ -48,6 +48,13 @@ public class Client {
                     if (turnNumber == 25) {
                         clientUI.updateCenterBlock(false);
                     }
+                } else if (msg.startsWith("AUTOPASS:")) {
+                    int playerWhoCannotMove = Integer.parseInt(msg.split(":")[1]);
+                    clientUI.appendMessage("Jogador " + playerWhoCannotMove
+                            + " não tem movimentos válidos. Turno passado automaticamente.");
+                } else if (msg.startsWith("GAMEOVER")) {
+                    clientUI.appendMessage("FIM DE JOGO! Nenhum jogador pode mover peças.");
+                    clientUI.gameOver();
                 } else if (msg.startsWith("MOVE:")) {
                     String[] parts = msg.split(":");
                     int player = Integer.parseInt(parts[1]);

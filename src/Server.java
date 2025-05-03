@@ -136,20 +136,36 @@ public class Server {
             // Move a peça
             board[fromRow][fromCol] = "";
             board[toRow][toCol] = playerSymbol;
-
+            
             // Verifica capturas
             checkCaptures(player, toRow, toCol);
-
+            
+            // Verifica se o próximo jogador tem movimentos válidos
+            int nextPlayer = (currentPlayer == 1) ? 2 : 1;
+            if (!hasValidMoves(nextPlayer)) {
+                // Se não tiver movimentos, passa o turno automaticamente
+                currentPlayer = nextPlayer;
+                broadcastAutoPass(nextPlayer);
+                nextPlayer = (currentPlayer == 1) ? 2 : 1;
+                
+                // Verifica novamente se o novo jogador tem movimentos
+                if (!hasValidMoves(nextPlayer)) {
+                    // Se nenhum jogador puder mover, fim de jogo
+                    broadcastGameOver();
+                    return true;
+                }
+            }
+            
             // Atualiza o turno
-            currentPlayer = (currentPlayer == 1) ? 2 : 1;
+            currentPlayer = nextPlayer;
             currentTurn++;
-
+            
             // Notifica os clientes
             broadcastPieceMove(player, fromRow, fromCol, toRow, toCol);
             broadcastTurnInfo();
             return true;
         }
-
+        
         return false;
     }
 
@@ -180,21 +196,21 @@ public class Server {
     private static synchronized void checkCaptures(int player, int movedToRow, int movedToCol) {
         String playerSymbol = (player == 1) ? "O" : "X";
         String opponentSymbol = (player == 1) ? "X" : "O";
-        
+
         // Verificar capturas nas 4 direções (cima, direita, baixo, esquerda)
-        int[][] directions = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
-        
+        int[][] directions = { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } };
+
         for (int[] dir : directions) {
             int adjacentRow = movedToRow + dir[0];
             int adjacentCol = movedToCol + dir[1];
-            
+
             // Verifica se está dentro do tabuleiro
             if (adjacentRow >= 0 && adjacentRow < 5 && adjacentCol >= 0 && adjacentCol < 5) {
                 // Se encontrou uma peça adversária adjacente
                 if (board[adjacentRow][adjacentCol].equals(opponentSymbol)) {
                     int oppositeRow = adjacentRow + dir[0];
                     int oppositeCol = adjacentCol + dir[1];
-                    
+
                     // Verifica se há uma peça aliada do outro lado
                     if (oppositeRow >= 0 && oppositeRow < 5 && oppositeCol >= 0 && oppositeCol < 5) {
                         if (board[oppositeRow][oppositeCol].equals(playerSymbol)) {
@@ -217,6 +233,64 @@ public class Server {
             try {
                 PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
                 out.println(captureMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static synchronized boolean hasValidMoves(int player) {
+        String playerSymbol = (player == 1) ? "O" : "X";
+
+        for (int row = 0; row < 5; row++) {
+            for (int col = 0; col < 5; col++) {
+                if (board[row][col].equals(playerSymbol)) {
+                    // Verifica se há pelo menos um movimento válido para esta peça
+                    if (canPieceMove(row, col)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static synchronized boolean canPieceMove(int row, int col) {
+        // Verifica as 4 direções possíveis (cima, direita, baixo, esquerda)
+        int[][] directions = { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } };
+
+        for (int[] dir : directions) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+
+            // Verifica se está dentro do tabuleiro e se a casa está vazia
+            if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
+                if (board[newRow][newCol].isEmpty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static synchronized void broadcastAutoPass(int playerWhoCannotMove) {
+        String passMsg = "AUTOPASS:" + playerWhoCannotMove;
+        for (ClientHandler client : clients) {
+            try {
+                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
+                out.println(passMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private static synchronized void broadcastGameOver() {
+        String gameOverMsg = "GAMEOVER";
+        for (ClientHandler client : clients) {
+            try {
+                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
+                out.println(gameOverMsg);
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -273,4 +273,18 @@ public class ClientUI {
         });
     }
 
+    public void gameOver() {
+        SwingUtilities.invokeLater(() -> {
+            turnLabel.setText("FIM DE JOGO!");
+            turnLabel.setForeground(Color.ORANGE);
+            
+            // Desabilita todos os botões
+            for (int row = 0; row < 5; row++) {
+                for (int col = 0; col < 5; col++) {
+                    boardButtons[row][col].setEnabled(false);
+                }
+            }
+        });
+    }
+
 }
