@@ -180,50 +180,30 @@ public class Server {
     private static synchronized void checkCaptures(int player, int movedToRow, int movedToCol) {
         String playerSymbol = (player == 1) ? "O" : "X";
         String opponentSymbol = (player == 1) ? "X" : "O";
-
-        // Verificar capturas em todas as direções
-        int[][] directions = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } }; // direita, baixo, esquerda, cima
-
-        for (int[] dir : directions) {
-            int betweenRow = movedToRow + dir[0];
-            int betweenCol = movedToCol + dir[1];
-            int oppositeRow = movedToRow + 2 * dir[0];
-            int oppositeCol = movedToCol + 2 * dir[1];
-
-            // Verifica se está dentro do tabuleiro
-            if (oppositeRow >= 0 && oppositeRow < 5 && oppositeCol >= 0 && oppositeCol < 5) {
-                // Verifica se há uma peça adversária no meio e uma peça aliada do outro lado
-                if (board[betweenRow][betweenCol].equals(opponentSymbol) &&
-                        board[oppositeRow][oppositeCol].equals(playerSymbol)) {
-
-                    // Verifica se não é a casa central
-                    if (!(betweenRow == CENTER_ROW && betweenCol == CENTER_COL)) {
-                        // Captura a peça adversária
-                        board[betweenRow][betweenCol] = "";
-                        broadcastCapture(betweenRow, betweenCol);
-                    }
-                }
-            }
-        }
-
-        // Verificar capturas entre a peça movida e uma peça adjacente do mesmo jogador
+        
+        // Verificar capturas nas 4 direções (cima, direita, baixo, esquerda)
+        int[][] directions = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+        
         for (int[] dir : directions) {
             int adjacentRow = movedToRow + dir[0];
             int adjacentCol = movedToCol + dir[1];
-
+            
+            // Verifica se está dentro do tabuleiro
             if (adjacentRow >= 0 && adjacentRow < 5 && adjacentCol >= 0 && adjacentCol < 5) {
-                // Se houver uma peça aliada adjacente, verifica se há uma peça adversária do
-                // outro lado
-                if (board[adjacentRow][adjacentCol].equals(playerSymbol)) {
-                    int betweenRow = movedToRow - dir[0];
-                    int betweenCol = movedToCol - dir[1];
-
-                    if (betweenRow >= 0 && betweenRow < 5 && betweenCol >= 0 && betweenCol < 5) {
-                        if (board[betweenRow][betweenCol].equals(opponentSymbol) &&
-                                !(betweenRow == CENTER_ROW && betweenCol == CENTER_COL)) {
-
-                            board[betweenRow][betweenCol] = "";
-                            broadcastCapture(betweenRow, betweenCol);
+                // Se encontrou uma peça adversária adjacente
+                if (board[adjacentRow][adjacentCol].equals(opponentSymbol)) {
+                    int oppositeRow = adjacentRow + dir[0];
+                    int oppositeCol = adjacentCol + dir[1];
+                    
+                    // Verifica se há uma peça aliada do outro lado
+                    if (oppositeRow >= 0 && oppositeRow < 5 && oppositeCol >= 0 && oppositeCol < 5) {
+                        if (board[oppositeRow][oppositeCol].equals(playerSymbol)) {
+                            // Verifica se não é a casa central
+                            if (!(adjacentRow == CENTER_ROW && adjacentCol == CENTER_COL)) {
+                                // Captura a peça adversária
+                                board[adjacentRow][adjacentCol] = "";
+                                broadcastCapture(adjacentRow, adjacentCol);
+                            }
                         }
                     }
                 }
