@@ -136,10 +136,10 @@ public class Server {
             // Move a peça
             board[fromRow][fromCol] = "";
             board[toRow][toCol] = playerSymbol;
-            
+
             // Verifica capturas
             checkCaptures(player, toRow, toCol);
-            
+
             // Verifica se o próximo jogador tem movimentos válidos
             int nextPlayer = (currentPlayer == 1) ? 2 : 1;
             if (!hasValidMoves(nextPlayer)) {
@@ -147,7 +147,7 @@ public class Server {
                 currentPlayer = nextPlayer;
                 broadcastAutoPass(nextPlayer);
                 nextPlayer = (currentPlayer == 1) ? 2 : 1;
-                
+
                 // Verifica novamente se o novo jogador tem movimentos
                 if (!hasValidMoves(nextPlayer)) {
                     // Se nenhum jogador puder mover, fim de jogo
@@ -155,17 +155,17 @@ public class Server {
                     return true;
                 }
             }
-            
+
             // Atualiza o turno
             currentPlayer = nextPlayer;
             currentTurn++;
-            
+
             // Notifica os clientes
             broadcastPieceMove(player, fromRow, fromCol, toRow, toCol);
             broadcastTurnInfo();
             return true;
         }
-        
+
         return false;
     }
 
@@ -225,6 +225,8 @@ public class Server {
                 }
             }
         }
+
+        checkGameEnd();
     }
 
     private static synchronized void broadcastCapture(int row, int col) {
@@ -284,9 +286,43 @@ public class Server {
             }
         }
     }
-    
+
     private static synchronized void broadcastGameOver() {
         String gameOverMsg = "GAMEOVER";
+        for (ClientHandler client : clients) {
+            try {
+                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
+                out.println(gameOverMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static synchronized void checkGameEnd() {
+        boolean player1HasPieces = false;
+        boolean player2HasPieces = false;
+
+        // Verifica se cada jogador ainda tem peças
+        for (int row = 0; row < 5; row++) {
+            for (int col = 0; col < 5; col++) {
+                if (board[row][col].equals("O")) {
+                    player1HasPieces = true;
+                } else if (board[row][col].equals("X")) {
+                    player2HasPieces = true;
+                }
+            }
+        }
+
+        // Determina o resultado
+        if (!player1HasPieces || !player2HasPieces) {
+            int winner = !player1HasPieces ? 2 : 1;
+            broadcastGameOver(winner);
+        }
+    }
+
+    private static synchronized void broadcastGameOver(int winner) {
+        String gameOverMsg = "GAMEOVER:" + winner;
         for (ClientHandler client : clients) {
             try {
                 PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);

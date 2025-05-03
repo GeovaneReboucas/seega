@@ -53,8 +53,8 @@ public class Client {
                     clientUI.appendMessage("Jogador " + playerWhoCannotMove
                             + " não tem movimentos válidos. Turno passado automaticamente.");
                 } else if (msg.startsWith("GAMEOVER")) {
-                    clientUI.appendMessage("FIM DE JOGO! Nenhum jogador pode mover peças.");
-                    clientUI.gameOver();
+                    int winner = Integer.parseInt(msg.split(":")[1]);
+                    clientUI.showGameResult(winner == clientId);    
                 } else if (msg.startsWith("MOVE:")) {
                     String[] parts = msg.split(":");
                     int player = Integer.parseInt(parts[1]);

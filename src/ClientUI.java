@@ -275,15 +275,41 @@ public class ClientUI {
 
     public void gameOver() {
         SwingUtilities.invokeLater(() -> {
-            turnLabel.setText("FIM DE JOGO!");
-            turnLabel.setForeground(Color.ORANGE);
-            
             // Desabilita todos os botões
             for (int row = 0; row < 5; row++) {
                 for (int col = 0; col < 5; col++) {
                     boardButtons[row][col].setEnabled(false);
                 }
             }
+            
+            JOptionPane.showMessageDialog(frame,
+                "O jogo terminou em empate!",
+                "Fim de Jogo",
+                JOptionPane.INFORMATION_MESSAGE);
+            
+            turnLabel.setText("EMPATE!");
+            turnLabel.setForeground(Color.ORANGE);
+        });
+    }
+
+    public void showGameResult(boolean isWinner) {
+        SwingUtilities.invokeLater(() -> {
+            // Desabilita todos os botões
+            for (int row = 0; row < 5; row++) {
+                for (int col = 0; col < 5; col++) {
+                    boardButtons[row][col].setEnabled(false);
+                }
+            }
+            
+            // Mostra mensagem de vitória/derrota
+            String message = isWinner ? "Você venceu! Parabéns!" : "Você perdeu. Tente novamente!";
+            JOptionPane.showMessageDialog(frame, 
+                message,
+                "Fim de Jogo",
+                JOptionPane.INFORMATION_MESSAGE);
+            
+            turnLabel.setText(isWinner ? "VOCÊ VENCEU!" : "VOCÊ PERDEU!");
+            turnLabel.setForeground(isWinner ? Color.GREEN : Color.RED);
         });
     }
 
