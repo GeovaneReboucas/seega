@@ -65,8 +65,14 @@ public class ClientUI {
         inputField.addActionListener(e -> {
             String msg = inputField.getText();
             if (!msg.trim().isEmpty() && !msg.equals("Digite sua mensagem...")) {
-                out.println(msg);
-                inputField.setText("");
+                if (msg.equals("/desistir")) {
+                    out.println("/desistir");
+                    inputField.setText("");
+                    appendMessage("Você desistiu da partida!");
+                } else {
+                    out.println(msg);
+                    inputField.setText("");
+                }
             }
         });
 
@@ -256,14 +262,14 @@ public class ClientUI {
             boardButtons[fromRow][fromCol].setText("");
             boardButtons[fromRow][fromCol].setEnabled(true);
             boardButtons[fromRow][fromCol].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-            
+
             // Coloca a peça na nova posição
             String symbol = (player == 1) ? "O" : "X";
             boardButtons[toRow][toCol].setText(symbol);
             boardButtons[toRow][toCol].setForeground(player == 1 ? Color.BLUE : Color.RED);
             boardButtons[toRow][toCol].setEnabled(false);
         });
-    }    
+    }
 
     public void capturePiece(int row, int col) {
         SwingUtilities.invokeLater(() -> {
@@ -281,12 +287,12 @@ public class ClientUI {
                     boardButtons[row][col].setEnabled(false);
                 }
             }
-            
+
             JOptionPane.showMessageDialog(frame,
-                "O jogo terminou em empate!",
-                "Fim de Jogo",
-                JOptionPane.INFORMATION_MESSAGE);
-            
+                    "O jogo terminou em empate!",
+                    "Fim de Jogo",
+                    JOptionPane.INFORMATION_MESSAGE);
+
             turnLabel.setText("EMPATE!");
             turnLabel.setForeground(Color.ORANGE);
         });
@@ -300,14 +306,14 @@ public class ClientUI {
                     boardButtons[row][col].setEnabled(false);
                 }
             }
-            
+
             // Mostra mensagem de vitória/derrota
             String message = isWinner ? "Você venceu! Parabéns!" : "Você perdeu. Tente novamente!";
-            JOptionPane.showMessageDialog(frame, 
-                message,
-                "Fim de Jogo",
-                JOptionPane.INFORMATION_MESSAGE);
-            
+            JOptionPane.showMessageDialog(frame,
+                    message,
+                    "Fim de Jogo",
+                    JOptionPane.INFORMATION_MESSAGE);
+
             turnLabel.setText(isWinner ? "VOCÊ VENCEU!" : "VOCÊ PERDEU!");
             turnLabel.setForeground(isWinner ? Color.GREEN : Color.RED);
         });

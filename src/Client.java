@@ -54,7 +54,7 @@ public class Client {
                             + " não tem movimentos válidos. Turno passado automaticamente.");
                 } else if (msg.startsWith("GAMEOVER")) {
                     int winner = Integer.parseInt(msg.split(":")[1]);
-                    clientUI.showGameResult(winner == clientId);    
+                    clientUI.showGameResult(winner == clientId);
                 } else if (msg.startsWith("MOVE:")) {
                     String[] parts = msg.split(":");
                     int player = Integer.parseInt(parts[1]);
@@ -77,6 +77,15 @@ public class Client {
                 } else if (msg.startsWith("CENTER:")) {
                     boolean blocked = msg.endsWith("BLOCKED");
                     clientUI.updateCenterBlock(blocked);
+                } else if (msg.contains("desistiu") || msg.contains("desconectou")) {
+                    // Mostra a mensagem de desistência no chat
+                    clientUI.appendMessage(msg);
+
+                    // Determina se este cliente é o vencedor
+                    boolean isWinner = !msg.contains("Jogador " + clientId);
+                    if (isWinner) {
+                        clientUI.showGameResult(true);
+                    }
                 } else {
                     clientUI.appendMessage(msg);
                 }

@@ -322,6 +322,16 @@ public class Server {
     }
 
     private static synchronized void broadcastGameOver(int winner) {
+        // Limpa o tabuleiro para uma nova partida
+        for (int i = 0; i < 5; i++) {
+            Arrays.fill(board[i], "");
+        }
+        board[CENTER_ROW][CENTER_COL] = "BLOCKED";
+
+        currentTurn = 1;
+        currentPlayer = 1;
+        movesInCurrentBlock = 0;
+
         String gameOverMsg = "GAMEOVER:" + winner;
         for (ClientHandler client : clients) {
             try {
@@ -331,6 +341,7 @@ public class Server {
                 e.printStackTrace();
             }
         }
+
     }
 
     static class ClientHandler implements Runnable {
@@ -381,12 +392,23 @@ public class Server {
                         int toRow = Integer.parseInt(parts[3]);
                         int toCol = Integer.parseInt(parts[4]);
                         movePiece(clientId, fromRow, fromCol, toRow, toCol);
+                    } else if (msg.equals("/desistir")) {
+                        // O jogador atual desistiu
+                        int winner = (clientId == 1) ? 2 : 1;
+                        broadcast("Jogador " + clientId + " desistiu da partida!");
+                        broadcastGameOver(winner);
+                        break;
                     } else {
                         broadcast("Cliente " + clientId + ": " + msg);
                     }
                 }
             } catch (IOException e) {
                 System.out.println("Cliente " + clientId + " desconectado.");
+                // Se um jogador desconectar, considerar como desistência
+                int winner = (clientId == 1) ? 2 : 1;
+                broadcast("Jogador " + clientId + " desconectou!");
+                broadcastGameOver(winner);
+            } finally {
                 clients.remove(this);
             }
         }
