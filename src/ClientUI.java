@@ -252,16 +252,25 @@ public class ClientUI {
 
     public void movePieceOnBoard(int player, int fromRow, int fromCol, int toRow, int toCol) {
         SwingUtilities.invokeLater(() -> {
-            String symbol = (player == 1) ? "O" : "X";
-
             // Limpa a posição original
             boardButtons[fromRow][fromCol].setText("");
             boardButtons[fromRow][fromCol].setEnabled(true);
-
+            boardButtons[fromRow][fromCol].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+            
             // Coloca a peça na nova posição
+            String symbol = (player == 1) ? "O" : "X";
             boardButtons[toRow][toCol].setText(symbol);
             boardButtons[toRow][toCol].setForeground(player == 1 ? Color.BLUE : Color.RED);
             boardButtons[toRow][toCol].setEnabled(false);
         });
+    }    
+
+    public void capturePiece(int row, int col) {
+        SwingUtilities.invokeLater(() -> {
+            boardButtons[row][col].setText("");
+            boardButtons[row][col].setEnabled(true);
+            boardButtons[row][col].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        });
     }
+
 }

@@ -62,6 +62,11 @@ public class Client {
                     int toRow = Integer.parseInt(parts[4]);
                     int toCol = Integer.parseInt(parts[5]);
                     clientUI.movePieceOnBoard(player, fromRow, fromCol, toRow, toCol);
+                } else if (msg.startsWith("CAPTURE:")) {
+                    String[] parts = msg.split(":");
+                    int row = Integer.parseInt(parts[1]);
+                    int col = Integer.parseInt(parts[2]);
+                    clientUI.capturePiece(row, col);
                 } else if (msg.startsWith("CENTER:")) {
                     boolean blocked = msg.endsWith("BLOCKED");
                     clientUI.updateCenterBlock(blocked);

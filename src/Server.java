@@ -128,7 +128,7 @@ public class Server {
             return false;
         }
 
-        // Verifica se é um movimento adjacente
+        // Verifica se é um movimento adjacente (horizontal ou vertical)
         int rowDiff = Math.abs(toRow - fromRow);
         int colDiff = Math.abs(toCol - fromCol);
 
@@ -136,6 +136,9 @@ public class Server {
             // Move a peça
             board[fromRow][fromCol] = "";
             board[toRow][toCol] = playerSymbol;
+
+            // Verifica capturas
+            checkCaptures(player, toRow, toCol);
 
             // Atualiza o turno
             currentPlayer = (currentPlayer == 1) ? 2 : 1;
@@ -168,6 +171,72 @@ public class Server {
             try {
                 PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
                 out.println(moveMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static synchronized void checkCaptures(int player, int movedToRow, int movedToCol) {
+        String playerSymbol = (player == 1) ? "O" : "X";
+        String opponentSymbol = (player == 1) ? "X" : "O";
+
+        // Verificar capturas em todas as direções
+        int[][] directions = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } }; // direita, baixo, esquerda, cima
+
+        for (int[] dir : directions) {
+            int betweenRow = movedToRow + dir[0];
+            int betweenCol = movedToCol + dir[1];
+            int oppositeRow = movedToRow + 2 * dir[0];
+            int oppositeCol = movedToCol + 2 * dir[1];
+
+            // Verifica se está dentro do tabuleiro
+            if (oppositeRow >= 0 && oppositeRow < 5 && oppositeCol >= 0 && oppositeCol < 5) {
+                // Verifica se há uma peça adversária no meio e uma peça aliada do outro lado
+                if (board[betweenRow][betweenCol].equals(opponentSymbol) &&
+                        board[oppositeRow][oppositeCol].equals(playerSymbol)) {
+
+                    // Verifica se não é a casa central
+                    if (!(betweenRow == CENTER_ROW && betweenCol == CENTER_COL)) {
+                        // Captura a peça adversária
+                        board[betweenRow][betweenCol] = "";
+                        broadcastCapture(betweenRow, betweenCol);
+                    }
+                }
+            }
+        }
+
+        // Verificar capturas entre a peça movida e uma peça adjacente do mesmo jogador
+        for (int[] dir : directions) {
+            int adjacentRow = movedToRow + dir[0];
+            int adjacentCol = movedToCol + dir[1];
+
+            if (adjacentRow >= 0 && adjacentRow < 5 && adjacentCol >= 0 && adjacentCol < 5) {
+                // Se houver uma peça aliada adjacente, verifica se há uma peça adversária do
+                // outro lado
+                if (board[adjacentRow][adjacentCol].equals(playerSymbol)) {
+                    int betweenRow = movedToRow - dir[0];
+                    int betweenCol = movedToCol - dir[1];
+
+                    if (betweenRow >= 0 && betweenRow < 5 && betweenCol >= 0 && betweenCol < 5) {
+                        if (board[betweenRow][betweenCol].equals(opponentSymbol) &&
+                                !(betweenRow == CENTER_ROW && betweenCol == CENTER_COL)) {
+
+                            board[betweenRow][betweenCol] = "";
+                            broadcastCapture(betweenRow, betweenCol);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static synchronized void broadcastCapture(int row, int col) {
+        String captureMsg = "CAPTURE:" + row + ":" + col;
+        for (ClientHandler client : clients) {
+            try {
+                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
+                out.println(captureMsg);
             } catch (IOException e) {
                 e.printStackTrace();
             }
