@@ -17,6 +17,10 @@ public class ClientUI {
     private PrintWriter out;
     private boolean centerBlocked = true;
 
+    private int selectedRow = -1;
+    private int selectedCol = -1;
+    private boolean isPositioningPhase = true;
+
     public ClientUI(int clientId, PrintWriter out, Client client) {
         this.clientId = clientId;
         this.out = out;
@@ -88,8 +92,34 @@ public class ClientUI {
                 final int r = row;
                 final int c = col;
                 button.addActionListener(e -> {
-                    if (button.getText().isEmpty() && !(centerBlocked && r == 2 && c == 2)) {
-                        client.sendMove(r, c);
+                    if (isPositioningPhase) {
+                        // Fase de posicionamento (turnos 1-24)
+                        if (button.getText().isEmpty() && !(centerBlocked && r == 2 && c == 2)) {
+                            client.sendMove(r, c);
+                        }
+                    } else {
+                        // Fase de movimentação (turno 25+)
+                        String currentSymbol = (clientId == 1) ? "O" : "X";
+
+                        if (selectedRow == -1 && selectedCol == -1) {
+                            // Selecionar uma peça para mover
+                            if (button.getText().equals(currentSymbol)) {
+                                selectedRow = r;
+                                selectedCol = c;
+                                button.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
+                            }
+                        } else {
+                            // Tentar mover a peça selecionada para esta posição
+                            if (button.getText().isEmpty() && isValidMove(selectedRow, selectedCol, r, c)) {
+                                // Enviar o movimento para o servidor
+                                client.sendMove(selectedRow, selectedCol, r, c);
+                            }
+                            // Deselecionar independentemente do movimento ser válido ou não
+                            boardButtons[selectedRow][selectedCol]
+                                    .setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+                            selectedRow = -1;
+                            selectedCol = -1;
+                        }
                     }
                 });
 
@@ -141,29 +171,97 @@ public class ClientUI {
             }
         });
     }
-    
+
     public void appendMessage(String msg) {
         chatArea.append(msg + "\n");
     }
 
     public void updateTurnInfo(int currentPlayer, int turnNumber) {
         SwingUtilities.invokeLater(() -> {
+            if (turnNumber >= 25) {
+                isPositioningPhase = false;
+            }
+
+            // Limpar seleção quando o turno muda
+            if (selectedRow != -1 && selectedCol != -1) {
+                boardButtons[selectedRow][selectedCol].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+                selectedRow = -1;
+                selectedCol = -1;
+            }
+
             if (currentPlayer == clientId) {
-                turnLabel.setText("SEU TURNO (Turno " + turnNumber + ")");
+                turnLabel.setText("SEU TURNO (Turno " + turnNumber + ")" +
+                        (isPositioningPhase ? "" : " - Selecione uma peça para mover"));
                 turnLabel.setForeground(Color.GREEN);
             } else {
                 turnLabel.setText("Turno do oponente (Turno " + turnNumber + ")");
                 turnLabel.setForeground(Color.RED);
             }
+
+            // Habilitar/desabilitar botões conforme o turno
+            for (int row = 0; row < 5; row++) {
+                for (int col = 0; col < 5; col++) {
+                    String currentSymbol = (clientId == 1) ? "O" : "X";
+                    boolean isMyPiece = boardButtons[row][col].getText().equals(currentSymbol);
+
+                    if (isPositioningPhase) {
+                        boardButtons[row][col].setEnabled(
+                                boardButtons[row][col].getText().isEmpty() &&
+                                        !(centerBlocked && row == 2 && col == 2) &&
+                                        currentPlayer == clientId);
+                    } else {
+                        boardButtons[row][col].setEnabled(
+                                (isMyPiece || boardButtons[row][col].getText().isEmpty()) &&
+                                        currentPlayer == clientId);
+                    }
+                }
+            }
         });
     }
 
+    // Método para verificar se um movimento é válido
+    private boolean isValidMove(int fromRow, int fromCol, int toRow, int toCol) {
+        // Verifica se é uma peça do jogador atual
+        String currentSymbol = (clientId == 1) ? "O" : "X";
+        if (!boardButtons[fromRow][fromCol].getText().equals(currentSymbol)) {
+            return false;
+        }
+
+        // Verifica se a casa de destino está vazia
+        if (!boardButtons[toRow][toCol].getText().isEmpty()) {
+            return false;
+        }
+
+        // Verifica se é um movimento adjacente (horizontal ou vertical)
+        int rowDiff = Math.abs(toRow - fromRow);
+        int colDiff = Math.abs(toCol - fromCol);
+
+        return (rowDiff == 1 && colDiff == 0) || (rowDiff == 0 && colDiff == 1);
+    }
+
+    // No método updateBoard do ClientUI.java, modifique para:
     public void updateBoard(int player, int row, int col) {
         SwingUtilities.invokeLater(() -> {
             String symbol = (player == 1) ? "O" : "X";
             boardButtons[row][col].setText(symbol);
             boardButtons[row][col].setForeground(player == 1 ? Color.BLUE : Color.RED);
-            boardButtons[row][col].setEnabled(false);
+            // Não desabilitar o botão na fase de movimentação
+            boardButtons[row][col].setEnabled(!isPositioningPhase || boardButtons[row][col].getText().isEmpty());
+        });
+    }
+
+    public void movePieceOnBoard(int player, int fromRow, int fromCol, int toRow, int toCol) {
+        SwingUtilities.invokeLater(() -> {
+            String symbol = (player == 1) ? "O" : "X";
+
+            // Limpa a posição original
+            boardButtons[fromRow][fromCol].setText("");
+            boardButtons[fromRow][fromCol].setEnabled(true);
+
+            // Coloca a peça na nova posição
+            boardButtons[toRow][toCol].setText(symbol);
+            boardButtons[toRow][toCol].setForeground(player == 1 ? Color.BLUE : Color.RED);
+            boardButtons[toRow][toCol].setEnabled(false);
         });
     }
 }

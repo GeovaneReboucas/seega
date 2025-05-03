@@ -111,6 +111,57 @@ public class Server {
         return false;
     }
 
+    public static synchronized boolean movePiece(int player, int fromRow, int fromCol, int toRow, int toCol) {
+        if (player != currentPlayer || currentTurn < 25) {
+            return false;
+        }
+
+        String playerSymbol = (player == 1) ? "O" : "X";
+
+        // Verifica se a peça original pertence ao jogador
+        if (!board[fromRow][fromCol].equals(playerSymbol)) {
+            return false;
+        }
+
+        // Verifica se a casa de destino está vazia
+        if (!board[toRow][toCol].isEmpty()) {
+            return false;
+        }
+
+        // Verifica se é um movimento adjacente
+        int rowDiff = Math.abs(toRow - fromRow);
+        int colDiff = Math.abs(toCol - fromCol);
+
+        if ((rowDiff == 1 && colDiff == 0) || (rowDiff == 0 && colDiff == 1)) {
+            // Move a peça
+            board[fromRow][fromCol] = "";
+            board[toRow][toCol] = playerSymbol;
+
+            // Atualiza o turno
+            currentPlayer = (currentPlayer == 1) ? 2 : 1;
+            currentTurn++;
+
+            // Notifica os clientes
+            broadcastPieceMove(player, fromRow, fromCol, toRow, toCol);
+            broadcastTurnInfo();
+            return true;
+        }
+
+        return false;
+    }
+
+    private static synchronized void broadcastPieceMove(int player, int fromRow, int fromCol, int toRow, int toCol) {
+        String moveMsg = "MOVEPIECE:" + player + ":" + fromRow + ":" + fromCol + ":" + toRow + ":" + toCol;
+        for (ClientHandler client : clients) {
+            try {
+                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
+                out.println(moveMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private static synchronized void broadcastMove(int player, int row, int col) {
         String moveMsg = "MOVE:" + player + ":" + row + ":" + col;
         for (ClientHandler client : clients) {
@@ -164,6 +215,13 @@ public class Server {
                         int row = Integer.parseInt(parts[1]);
                         int col = Integer.parseInt(parts[2]);
                         makeMove(clientId, row, col);
+                    } else if (msg.startsWith("MOVEPIECE:")) {
+                        String[] parts = msg.split(":");
+                        int fromRow = Integer.parseInt(parts[1]);
+                        int fromCol = Integer.parseInt(parts[2]);
+                        int toRow = Integer.parseInt(parts[3]);
+                        int toCol = Integer.parseInt(parts[4]);
+                        movePiece(clientId, fromRow, fromCol, toRow, toCol);
                     } else {
                         broadcast("Cliente " + clientId + ": " + msg);
                     }

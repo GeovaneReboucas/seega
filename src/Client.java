@@ -54,6 +54,14 @@ public class Client {
                     int row = Integer.parseInt(parts[2]);
                     int col = Integer.parseInt(parts[3]);
                     clientUI.updateBoard(player, row, col);
+                } else if (msg.startsWith("MOVEPIECE:")) {
+                    String[] parts = msg.split(":");
+                    int player = Integer.parseInt(parts[1]);
+                    int fromRow = Integer.parseInt(parts[2]);
+                    int fromCol = Integer.parseInt(parts[3]);
+                    int toRow = Integer.parseInt(parts[4]);
+                    int toCol = Integer.parseInt(parts[5]);
+                    clientUI.movePieceOnBoard(player, fromRow, fromCol, toRow, toCol);
                 } else if (msg.startsWith("CENTER:")) {
                     boolean blocked = msg.endsWith("BLOCKED");
                     clientUI.updateCenterBlock(blocked);
@@ -69,6 +77,12 @@ public class Client {
     public void sendMove(int row, int col) {
         if (myTurn) {
             out.println("MOVE:" + row + ":" + col);
+        }
+    }
+
+    public void sendMove(int fromRow, int fromCol, int toRow, int toCol) {
+        if (myTurn) {
+            out.println("MOVEPIECE:" + fromRow + ":" + fromCol + ":" + toRow + ":" + toCol);
         }
     }
 
