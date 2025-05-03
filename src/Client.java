@@ -38,13 +38,17 @@ public class Client {
             String msg;
             while ((msg = in.readLine()) != null) {
                 if (msg.startsWith("TURN:")) {
-                    // Formato: TURN:player:turnNumber
                     String[] parts = msg.split(":");
                     int player = Integer.parseInt(parts[1]);
                     myTurn = (player == clientId);
-                    clientUI.updateTurnInfo(player, Integer.parseInt(parts[2]));
+                    int turnNumber = Integer.parseInt(parts[2]);
+                    clientUI.updateTurnInfo(player, turnNumber);
+
+                    // Verifica se é turno 25 para desbloquear o centro
+                    if (turnNumber == 25) {
+                        clientUI.updateCenterBlock(false);
+                    }
                 } else if (msg.startsWith("MOVE:")) {
-                    // Formato: MOVE:player:row:col
                     String[] parts = msg.split(":");
                     int player = Integer.parseInt(parts[1]);
                     int row = Integer.parseInt(parts[2]);

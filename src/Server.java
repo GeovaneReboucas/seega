@@ -81,13 +81,14 @@ public class Server {
 
             // Atualiza o estado do jogo
             movesInCurrentBlock++;
-            currentTurn++;
 
-            // Verifica se precisa desbloquear o centro
-            if (currentTurn == 25) {
+            // Verifica se precisa desbloquear o centro (ANTES de incrementar o currentTurn)
+            if (currentTurn == 24) { // Alterado para verificar no turno 24
                 board[CENTER_ROW][CENTER_COL] = "";
                 broadcastCenterBlocked(false);
             }
+
+            currentTurn++; // Movido para depois da verificação do centro
 
             // Verifica se precisa mudar o jogador
             if (currentTurn <= 24) {
