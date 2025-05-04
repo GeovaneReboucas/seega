@@ -15,6 +15,7 @@ public class Server {
     private static final int CENTER_ROW = 2;
     private static final int CENTER_COL = 2;
     private static int lastPlayerToPlace = 0;
+    private static boolean startingPlayerChosen = false;
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -33,13 +34,26 @@ public class Server {
             ClientHandler handler = new ClientHandler(clientSocket, clientCounter);
             clients.add(handler);
             new Thread(handler).start();
-
-            // Se for o segundo jogador, inicia o jogo
+        
+            // Se for o segundo jogador, espera a escolha do primeiro jogador
             if (clientCounter == 2) {
+                while (!startingPlayerChosen) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 broadcastTurnInfo();
                 broadcastCenterBlocked(true);
-            }
+            }        
         }
+    }
+
+    // Adicione este método na classe Server
+    public static synchronized void setStartingPlayer(int player) {
+        currentPlayer = player;
+        startingPlayerChosen = true;
     }
 
     private static synchronized void broadcastTurnInfo() {
@@ -389,7 +403,14 @@ public class Server {
             try {
                 String msg;
                 while ((msg = in.readLine()) != null) {
-                    if (msg.startsWith("MOVE:")) {
+                    if (msg.startsWith("STARTINGPLAYER:")) {
+                        int startingPlayer = Integer.parseInt(msg.split(":")[1]);
+                        Server.setStartingPlayer(startingPlayer);
+                        // Informa a ambos os clientes sobre o jogador inicial
+                        for (ClientHandler client : clients) {
+                            client.out.println("STARTINGPLAYER:" + startingPlayer);
+                        }
+                    } else if (msg.startsWith("MOVE:")) {
                         // Formato: MOVE:row:col
                         String[] parts = msg.split(":");
                         int row = Integer.parseInt(parts[1]);

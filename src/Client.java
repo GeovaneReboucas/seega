@@ -3,6 +3,9 @@ package src;
 import java.io.*;
 import java.net.*;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 public class Client {
     private static final String SERVER_IP = "localhost";
     private static final int SERVER_PORT = 12345;
@@ -13,6 +16,7 @@ public class Client {
     private ClientUI clientUI;
     private int clientId;
     private boolean myTurn = false;
+    private boolean startingPlayerChosen = false;
 
     public Client() {
         try {
@@ -23,6 +27,23 @@ public class Client {
             String idMessage = in.readLine();
             if (idMessage != null && idMessage.startsWith("ID:")) {
                 clientId = Integer.parseInt(idMessage.substring(3));
+            }
+
+            if (clientId == 1) {
+                SwingUtilities.invokeLater(() -> {
+                    int option = JOptionPane.showOptionDialog(null,
+                            "Qual jogador deve iniciar?",
+                            "Escolha o jogador inicial",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            new Object[] { "Jogador 1", "Jogador 2" },
+                            "Jogador 1");
+
+                    int startingPlayer = (option == 0) ? 1 : 2;
+                    out.println("STARTINGPLAYER:" + startingPlayer);
+                    startingPlayerChosen = true;
+                });
             }
 
             clientUI = new ClientUI(clientId, out, this);
@@ -48,6 +69,10 @@ public class Client {
                     if (turnNumber == 25) {
                         clientUI.updateCenterBlock(false);
                     }
+                } else if (msg.startsWith("STARTINGPLAYER:")) {
+                    int startingPlayer = Integer.parseInt(msg.split(":")[1]);
+                    clientUI.setStartingPlayer(startingPlayer);
+                    startingPlayerChosen = true;
                 } else if (msg.startsWith("AUTOPASS:")) {
                     int playerWhoCannotMove = Integer.parseInt(msg.split(":")[1]);
                     clientUI.appendMessage("Jogador " + playerWhoCannotMove

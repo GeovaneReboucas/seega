@@ -5,12 +5,13 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 public class ClientUI {
     private JFrame frame = new JFrame("Seega");
     private JTextArea chatArea = new JTextArea(20, 40);
     private JTextField inputField = new JTextField(40);
-    private JLabel turnLabel = new JLabel("Aguardando início do jogo...");
+    private JLabel turnLabel = new JLabel("Aguardando inicio do jogo...");
     private JButton[][] boardButtons = new JButton[5][5];
     private Client client;
     private int clientId;
@@ -179,7 +180,8 @@ public class ClientUI {
     }
 
     public void appendMessage(String msg) {
-        chatArea.append(msg + "\n");
+        String sanitized = new String(msg.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        chatArea.append(sanitized + "\n");
     }
 
     public void updateTurnInfo(int currentPlayer, int turnNumber) {
@@ -197,7 +199,7 @@ public class ClientUI {
 
             if (currentPlayer == clientId) {
                 turnLabel.setText("SEU TURNO (Turno " + turnNumber + ")" +
-                        (isPositioningPhase ? "" : " - Selecione uma peça para mover"));
+                        (isPositioningPhase ? "" : " - Selecione uma pe\\u00e7a para mover"));
                 turnLabel.setForeground(Color.GREEN);
             } else {
                 turnLabel.setText("Turno do oponente (Turno " + turnNumber + ")");
@@ -316,6 +318,12 @@ public class ClientUI {
 
             turnLabel.setText(isWinner ? "VOCÊ VENCEU!" : "VOCÊ PERDEU!");
             turnLabel.setForeground(isWinner ? Color.GREEN : Color.RED);
+        });
+    }
+
+    public void setStartingPlayer(int player) {
+        SwingUtilities.invokeLater(() -> {
+            appendMessage("O jogador " + player + " foi escolhido para iniciar o jogo!");
         });
     }
 
