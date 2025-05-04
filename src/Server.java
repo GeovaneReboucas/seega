@@ -34,7 +34,7 @@ public class Server {
             ClientHandler handler = new ClientHandler(clientSocket, clientCounter);
             clients.add(handler);
             new Thread(handler).start();
-        
+
             // Se for o segundo jogador, espera a escolha do primeiro jogador
             if (clientCounter == 2) {
                 while (!startingPlayerChosen) {
@@ -46,7 +46,7 @@ public class Server {
                 }
                 broadcastTurnInfo();
                 broadcastCenterBlocked(true);
-            }        
+            }
         }
     }
 
@@ -54,30 +54,6 @@ public class Server {
     public static synchronized void setStartingPlayer(int player) {
         currentPlayer = player;
         startingPlayerChosen = true;
-    }
-
-    private static synchronized void broadcastTurnInfo() {
-        String turnInfo = "TURN:" + currentPlayer + ":" + currentTurn;
-        for (ClientHandler client : clients) {
-            try {
-                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
-                out.println(turnInfo);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private static synchronized void broadcastCenterBlocked(boolean blocked) {
-        String blockMsg = "CENTER:" + (blocked ? "BLOCKED" : "UNBLOCKED");
-        for (ClientHandler client : clients) {
-            try {
-                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
-                out.println(blockMsg);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public static synchronized boolean makeMove(int player, int row, int col) {
@@ -155,26 +131,35 @@ public class Server {
             board[toRow][toCol] = playerSymbol;
 
             // Verifica capturas
-            checkCaptures(player, toRow, toCol);
+            boolean captureOccurred = checkCaptures(player, toRow, toCol);
 
-            // Verifica se o próximo jogador tem movimentos válidos
-            int nextPlayer = (currentPlayer == 1) ? 2 : 1;
-            if (!hasValidMoves(nextPlayer)) {
-                // Se não tiver movimentos, passa o turno automaticamente
-                currentPlayer = nextPlayer;
-                broadcastAutoPass(nextPlayer);
-                nextPlayer = (currentPlayer == 1) ? 2 : 1;
+            // Verifica se o jogador atual ainda tem movimentos válidos
+            // (apenas se não houve captura, pois se houve, ele continua)
+            if (!captureOccurred) {
+                // Verifica se o próximo jogador tem movimentos válidos
+                int nextPlayer = (currentPlayer == 1) ? 2 : 1;
 
-                // Verifica novamente se o novo jogador tem movimentos
+                // Se o próximo jogador não tem movimentos válidos
                 if (!hasValidMoves(nextPlayer)) {
-                    // Se nenhum jogador puder mover, fim de jogo
-                    broadcastGameOver();
+                    broadcastAutoPass(nextPlayer);
+
+                    // Se o jogador atual também não tem movimentos válidos
+                    if (!hasValidMoves(currentPlayer)) {
+                        broadcastGameOver();
+                        return true;
+                    }
+
+                    // O jogador atual mantém o turno
+                    currentTurn++;
+                    broadcastPieceMove(player, fromRow, fromCol, toRow, toCol);
+                    broadcastTurnInfo();
                     return true;
                 }
+
+                // Muda o turno normalmente
+                currentPlayer = nextPlayer;
             }
 
-            // Atualiza o turno
-            currentPlayer = nextPlayer;
             currentTurn++;
 
             // Notifica os clientes
@@ -185,13 +170,138 @@ public class Server {
 
         return false;
     }
-    
+
     private static void checkPhaseTransition() {
         if (currentTurn == 25) {
             currentPlayer = lastPlayerToPlace;
             broadcastTurnInfo();
-        }    
-    }    
+        }
+    }
+
+    private static synchronized boolean checkCaptures(int player, int movedToRow, int movedToCol) {
+        String playerSymbol = (player == 1) ? "O" : "X";
+        String opponentSymbol = (player == 1) ? "X" : "O";
+        boolean captureOccurred = false;
+
+        // Verificar capturas nas 4 direções (cima, direita, baixo, esquerda)
+        int[][] directions = { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } };
+
+        for (int[] dir : directions) {
+            int adjacentRow = movedToRow + dir[0];
+            int adjacentCol = movedToCol + dir[1];
+
+            // Verifica se está dentro do tabuleiro
+            if (adjacentRow >= 0 && adjacentRow < 5 && adjacentCol >= 0 && adjacentCol < 5) {
+                // Se encontrou uma peça adversária adjacente
+                if (board[adjacentRow][adjacentCol].equals(opponentSymbol)) {
+                    int oppositeRow = adjacentRow + dir[0];
+                    int oppositeCol = adjacentCol + dir[1];
+
+                    // Verifica se há uma peça aliada do outro lado
+                    if (oppositeRow >= 0 && oppositeRow < 5 && oppositeCol >= 0 && oppositeCol < 5) {
+                        if (board[oppositeRow][oppositeCol].equals(playerSymbol)) {
+                            // Verifica se não é a casa central
+                            if (!(adjacentRow == CENTER_ROW && adjacentCol == CENTER_COL)) {
+                                // Captura a peça adversária
+                                board[adjacentRow][adjacentCol] = "";
+                                broadcastCapture(adjacentRow, adjacentCol);
+                                captureOccurred = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        checkGameEnd();
+        return captureOccurred;
+    }
+
+    private static synchronized boolean hasValidMoves(int player) {
+        String playerSymbol = (player == 1) ? "O" : "X";
+
+        for (int row = 0; row < 5; row++) {
+            for (int col = 0; col < 5; col++) {
+                if (board[row][col].equals(playerSymbol)) {
+                    // Verifica todas as direções possíveis
+                    if (row > 0 && board[row - 1][col].isEmpty())
+                        return true; // Cima
+                    if (row < 4 && board[row + 1][col].isEmpty())
+                        return true; // Baixo
+                    if (col > 0 && board[row][col - 1].isEmpty())
+                        return true; // Esquerda
+                    if (col < 4 && board[row][col + 1].isEmpty())
+                        return true; // Direita
+                }
+            }
+        }
+        return false;
+    }
+
+    private static synchronized boolean canPieceMove(int row, int col) {
+        // Verifica as 4 direções possíveis (cima, direita, baixo, esquerda)
+        int[][] directions = { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } };
+
+        for (int[] dir : directions) {
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+
+            // Verifica se está dentro do tabuleiro e se a casa está vazia
+            if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
+                if (board[newRow][newCol].isEmpty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static synchronized void checkGameEnd() {
+        boolean player1HasPieces = false;
+        boolean player2HasPieces = false;
+
+        // Verifica se cada jogador ainda tem peças
+        for (int row = 0; row < 5; row++) {
+            for (int col = 0; col < 5; col++) {
+                if (board[row][col].equals("O")) {
+                    player1HasPieces = true;
+                } else if (board[row][col].equals("X")) {
+                    player2HasPieces = true;
+                }
+            }
+        }
+
+        // Determina o resultado
+        if (!player1HasPieces || !player2HasPieces) {
+            int winner = !player1HasPieces ? 2 : 1;
+            broadcastGameOver(winner);
+        }
+    }
+
+    // Broadcast Methods
+    private static synchronized void broadcastTurnInfo() {
+        String turnInfo = "TURN:" + currentPlayer + ":" + currentTurn;
+        for (ClientHandler client : clients) {
+            try {
+                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
+                out.println(turnInfo);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static synchronized void broadcastCenterBlocked(boolean blocked) {
+        String blockMsg = "CENTER:" + (blocked ? "BLOCKED" : "UNBLOCKED");
+        for (ClientHandler client : clients) {
+            try {
+                PrintWriter out = new PrintWriter(client.socket.getOutputStream(), true);
+                out.println(blockMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private static synchronized void broadcastPieceMove(int player, int fromRow, int fromCol, int toRow, int toCol) {
         String moveMsg = "MOVEPIECE:" + player + ":" + fromRow + ":" + fromCol + ":" + toRow + ":" + toCol;
@@ -217,42 +327,6 @@ public class Server {
         }
     }
 
-    private static synchronized void checkCaptures(int player, int movedToRow, int movedToCol) {
-        String playerSymbol = (player == 1) ? "O" : "X";
-        String opponentSymbol = (player == 1) ? "X" : "O";
-
-        // Verificar capturas nas 4 direções (cima, direita, baixo, esquerda)
-        int[][] directions = { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } };
-
-        for (int[] dir : directions) {
-            int adjacentRow = movedToRow + dir[0];
-            int adjacentCol = movedToCol + dir[1];
-
-            // Verifica se está dentro do tabuleiro
-            if (adjacentRow >= 0 && adjacentRow < 5 && adjacentCol >= 0 && adjacentCol < 5) {
-                // Se encontrou uma peça adversária adjacente
-                if (board[adjacentRow][adjacentCol].equals(opponentSymbol)) {
-                    int oppositeRow = adjacentRow + dir[0];
-                    int oppositeCol = adjacentCol + dir[1];
-
-                    // Verifica se há uma peça aliada do outro lado
-                    if (oppositeRow >= 0 && oppositeRow < 5 && oppositeCol >= 0 && oppositeCol < 5) {
-                        if (board[oppositeRow][oppositeCol].equals(playerSymbol)) {
-                            // Verifica se não é a casa central
-                            if (!(adjacentRow == CENTER_ROW && adjacentCol == CENTER_COL)) {
-                                // Captura a peça adversária
-                                board[adjacentRow][adjacentCol] = "";
-                                broadcastCapture(adjacentRow, adjacentCol);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        checkGameEnd();
-    }
-
     private static synchronized void broadcastCapture(int row, int col) {
         String captureMsg = "CAPTURE:" + row + ":" + col;
         for (ClientHandler client : clients) {
@@ -263,40 +337,6 @@ public class Server {
                 e.printStackTrace();
             }
         }
-    }
-
-    private static synchronized boolean hasValidMoves(int player) {
-        String playerSymbol = (player == 1) ? "O" : "X";
-
-        for (int row = 0; row < 5; row++) {
-            for (int col = 0; col < 5; col++) {
-                if (board[row][col].equals(playerSymbol)) {
-                    // Verifica se há pelo menos um movimento válido para esta peça
-                    if (canPieceMove(row, col)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private static synchronized boolean canPieceMove(int row, int col) {
-        // Verifica as 4 direções possíveis (cima, direita, baixo, esquerda)
-        int[][] directions = { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } };
-
-        for (int[] dir : directions) {
-            int newRow = row + dir[0];
-            int newCol = col + dir[1];
-
-            // Verifica se está dentro do tabuleiro e se a casa está vazia
-            if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
-                if (board[newRow][newCol].isEmpty()) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     private static synchronized void broadcastAutoPass(int playerWhoCannotMove) {
@@ -323,28 +363,6 @@ public class Server {
         }
     }
 
-    private static synchronized void checkGameEnd() {
-        boolean player1HasPieces = false;
-        boolean player2HasPieces = false;
-
-        // Verifica se cada jogador ainda tem peças
-        for (int row = 0; row < 5; row++) {
-            for (int col = 0; col < 5; col++) {
-                if (board[row][col].equals("O")) {
-                    player1HasPieces = true;
-                } else if (board[row][col].equals("X")) {
-                    player2HasPieces = true;
-                }
-            }
-        }
-
-        // Determina o resultado
-        if (!player1HasPieces || !player2HasPieces) {
-            int winner = !player1HasPieces ? 2 : 1;
-            broadcastGameOver(winner);
-        }
-    }
-
     private static synchronized void broadcastGameOver(int winner) {
         // Limpa o tabuleiro para uma nova partida
         for (int i = 0; i < 5; i++) {
@@ -365,8 +383,8 @@ public class Server {
                 e.printStackTrace();
             }
         }
-
     }
+    //
 
     static class ClientHandler implements Runnable {
         private Socket socket;

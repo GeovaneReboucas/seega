@@ -199,7 +199,7 @@ public class ClientUI {
 
             if (currentPlayer == clientId) {
                 turnLabel.setText("SEU TURNO (Turno " + turnNumber + ")" +
-                        (isPositioningPhase ? "" : " - Selecione uma pe\\u00e7a para mover"));
+                        (isPositioningPhase ? "" : " - Selecione uma peça para mover"));
                 turnLabel.setForeground(Color.GREEN);
             } else {
                 turnLabel.setText("Turno do oponente (Turno " + turnNumber + ")");
@@ -310,13 +310,13 @@ public class ClientUI {
             }
 
             // Mostra mensagem de vitória/derrota
-            String message = isWinner ? "Você venceu! Parabéns!" : "Você perdeu. Tente novamente!";
+            String message = isWinner ? "Voce venceu! Parabens!" : "Voce perdeu. Tente novamente!";
             JOptionPane.showMessageDialog(frame,
                     message,
                     "Fim de Jogo",
                     JOptionPane.INFORMATION_MESSAGE);
 
-            turnLabel.setText(isWinner ? "VOCÊ VENCEU!" : "VOCÊ PERDEU!");
+            turnLabel.setText(isWinner ? "VOCE VENCEU!" : "VOCE PERDEU!");
             turnLabel.setForeground(isWinner ? Color.GREEN : Color.RED);
         });
     }
