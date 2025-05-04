@@ -14,6 +14,7 @@ public class Server {
     private static String[][] board = new String[5][5]; // Para rastrear as peças
     private static final int CENTER_ROW = 2;
     private static final int CENTER_COL = 2;
+    private static int lastPlayerToPlace = 0;
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -89,6 +90,7 @@ public class Server {
             }
 
             currentTurn++; // Movido para depois da verificação do centro
+            checkPhaseTransition();
 
             // Verifica se precisa mudar o jogador
             if (currentTurn <= 24) {
@@ -96,6 +98,7 @@ public class Server {
                 if (movesInCurrentBlock >= 2) {
                     currentPlayer = (currentPlayer == 1) ? 2 : 1;
                     movesInCurrentBlock = 0;
+                    lastPlayerToPlace = player;
                 }
             } else {
                 // A partir do turno 25: alterna a cada jogada
@@ -168,6 +171,13 @@ public class Server {
 
         return false;
     }
+    
+    private static void checkPhaseTransition() {
+        if (currentTurn == 25) {
+            currentPlayer = lastPlayerToPlace;
+            broadcastTurnInfo();
+        }    
+    }    
 
     private static synchronized void broadcastPieceMove(int player, int fromRow, int fromCol, int toRow, int toCol) {
         String moveMsg = "MOVEPIECE:" + player + ":" + fromRow + ":" + fromCol + ":" + toRow + ":" + toCol;
