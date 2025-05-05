@@ -1,7 +1,10 @@
-package src;
+package src.ui;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
+import src.entities.Client;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.PrintWriter;

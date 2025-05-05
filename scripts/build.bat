@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 rem Define os diretórios
 set SRC_DIR=..\src
@@ -12,9 +12,13 @@ if not exist %OUT_DIR% (
     mkdir %OUT_DIR%
 )
 
-rem Compila os arquivos .java
+rem Compila os arquivos .java recursivamente
 echo Compilando arquivos Java...
-javac -d %OUT_DIR% %SRC_DIR%\*.java
+for /r %SRC_DIR% %%f in (*.java) do (
+    set "java_files=!java_files! "%%f""
+)
+
+javac -d %OUT_DIR% !java_files!
 
 if errorlevel 1 (
     echo Erro na compilação.
