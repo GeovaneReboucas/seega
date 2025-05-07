@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 import src.entities.Client;
+import src.utils.Constants;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -16,6 +17,7 @@ public class ClientUI {
     private JTextField inputField = new JTextField(40);
     private JLabel turnLabel = new JLabel("Aguardando inicio do jogo...");
     private JButton[][] boardButtons = new JButton[5][5];
+    private JButton resignButton;
     private Client client;
     private int clientId;
     private PrintWriter out;
@@ -138,10 +140,38 @@ public class ClientUI {
             }
         }
 
-        // Painel de informações
+        // Botão de desistência
+        resignButton = new JButton("Desistir");
+        resignButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        resignButton.setBackground(new Color(143, 56, 56));
+        resignButton.setForeground(Color.WHITE);
+        resignButton.setFocusPainted(false);
+        resignButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(
+                    frame,
+                    Constants.QUIT_MATCH_QUESTION,
+                    Constants.CONFIRM_WITHDRAWAL,
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                out.println("/desistir");
+                appendMessage(Constants.GAVE_UP_THE_GAME);
+                resignButton.setEnabled(false);
+            }
+        });
+
+        // Adicionar o botão ao painel de informações
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(new Color(32, 41, 59));
+        buttonPanel.add(resignButton);
+
+        // Modificar o infoPanel para incluir o buttonPanel
         JPanel infoPanel = new JPanel(new BorderLayout());
         infoPanel.setBackground(new Color(32, 41, 59));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        infoPanel.add(turnLabel, BorderLayout.CENTER);
+        infoPanel.add(buttonPanel, BorderLayout.EAST); // Adicionar o painel de botões
 
         turnLabel.setForeground(Color.WHITE);
         turnLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -328,6 +358,14 @@ public class ClientUI {
         SwingUtilities.invokeLater(() -> {
             appendMessage("O jogador " + player + " foi escolhido para iniciar o jogo!");
         });
+    }
+
+    public void disableResignButton() {
+        SwingUtilities.invokeLater(() -> resignButton.setEnabled(false));
+    }
+
+    public void enableResignButton() {
+        SwingUtilities.invokeLater(() -> resignButton.setEnabled(true));
     }
 
 }

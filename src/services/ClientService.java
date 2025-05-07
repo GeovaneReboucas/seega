@@ -85,13 +85,14 @@ public class ClientService {
 
     public void handleAutoPassMessage(String msg) {
         int playerWhoCannotMove = Integer.parseInt(msg.split(":")[1]);
-        clientUI.appendMessage("Jogador " + playerWhoCannotMove + 
+        clientUI.appendMessage("Jogador " + playerWhoCannotMove +
                 Constants.AUTO_PASS_MESSAGE);
     }
 
     public void handleGameOverMessage(String msg) {
         int winner = Integer.parseInt(msg.split(":")[1]);
         clientUI.showGameResult(winner == clientId);
+        clientUI.disableResignButton();
     }
 
     public void handleMoveMessage(String msg) {
@@ -130,13 +131,14 @@ public class ClientService {
         if (isWinner) {
             clientUI.showGameResult(true);
         }
+        clientUI.disableResignButton();
     }
 
     public void handleConnectionError(IOException e) {
         System.err.println("Erro na conexão com o servidor: " + e.getMessage());
         e.printStackTrace();
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(null, 
+            JOptionPane.showMessageDialog(null,
                     Constants.CONNECTION_ERROR_MESSAGE,
                     Constants.CONNECTION_ERROR_TITLE,
                     JOptionPane.ERROR_MESSAGE);
@@ -147,8 +149,8 @@ public class ClientService {
     public void handleDisconnection() {
         System.out.println("Conexão com o servidor encerrada.");
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(null, 
-                    Constants.DISCONNECTION_MESSAGE, 
+            JOptionPane.showMessageDialog(null,
+                    Constants.DISCONNECTION_MESSAGE,
                     Constants.CONNECTION_ERROR_TITLE,
                     JOptionPane.ERROR_MESSAGE);
             System.exit(0);

@@ -43,6 +43,9 @@ public class Constants {
 
     // Mensagens de diálogo
     public static final String ENTER_VALID_PORT = "Por favor, insira uma porta valida.";
+    public static final String QUIT_MATCH_QUESTION = "Tem certeza que deseja desistir da partida?";
+    public static final String CONFIRM_WITHDRAWAL = "Confirmar Desistencia";
+    public static final String GAVE_UP_THE_GAME = "Voce desistiu da partida!";
     public static final String STARTING_PLAYER_TITLE = "Escolha o jogador inicial";
     public static final String STARTING_PLAYER_QUESTION = "Qual jogador deve iniciar?";
     public static final String[] PLAYER_OPTIONS = { "Jogador 1", "Jogador 2" };
