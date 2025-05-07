@@ -2,10 +2,13 @@ package src.entities;
 
 import java.io.*;
 import java.net.*;
+
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import src.services.ClientService;
 import src.ui.ClientUI;
+import src.ui.ConnectionDialog;
 import src.utils.Constants;
 
 public class Client {
@@ -17,12 +20,19 @@ public class Client {
     private ClientService clientService;
 
     public Client() {
-        initializeConnection();
+        ConnectionDialog connectionDialog = new ConnectionDialog(null);
+        connectionDialog.setVisible(true);
+
+        if (connectionDialog.isConfirmed()) {
+            initializeConnection(connectionDialog.getIp(), connectionDialog.getPort());
+        } else {
+            System.exit(0);
+        }
     }
 
-    private void initializeConnection() {
+    private void initializeConnection(String serverIp, int serverPort) {
         try {
-            socket = new Socket(Constants.SERVER_IP, Constants.SERVER_PORT);
+            socket = new Socket(serverIp, serverPort);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
@@ -41,7 +51,15 @@ public class Client {
             startMessageReceiver();
 
         } catch (IOException e) {
-            clientService.handleConnectionError(e);
+            if (clientService != null) {
+                clientService.handleConnectionError(e);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Não foi possível conectar ao servidor.\nVerifique o IP e a porta e tente novamente.",
+                        "Erro de Conexão",
+                        JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            }
         }
     }
 
@@ -73,6 +91,16 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(Client::new);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                new Client();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null,
+                        "Erro ao iniciar o cliente: " + e.getMessage(),
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            }
+        });
     }
 }

@@ -42,6 +42,7 @@ public class Constants {
     public static final String DISCONNECTION_MESSAGE = "Conexão com o servidor perdida.";
 
     // Mensagens de diálogo
+    public static final String ENTER_VALID_PORT = "Por favor, insira uma porta valida.";
     public static final String STARTING_PLAYER_TITLE = "Escolha o jogador inicial";
     public static final String STARTING_PLAYER_QUESTION = "Qual jogador deve iniciar?";
     public static final String[] PLAYER_OPTIONS = { "Jogador 1", "Jogador 2" };
