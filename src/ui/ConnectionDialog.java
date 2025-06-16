@@ -19,7 +19,7 @@ import src.utils.Constants;
 
 public class ConnectionDialog extends JDialog {
     private JTextField ipField;
-    private JTextField portField;
+    // private JTextField portField;
     private boolean confirmed = false;
     private String ip;
     private int port;
@@ -37,9 +37,9 @@ public class ConnectionDialog extends JDialog {
         ipField = new JTextField(Constants.SERVER_IP);
         panel.add(ipField);
 
-        panel.add(new JLabel("Porta:"));
-        portField = new JTextField(String.valueOf(Constants.SERVER_PORT));
-        panel.add(portField);
+        // panel.add(new JLabel("Porta:"));
+        // portField = new JTextField(String.valueOf(Constants.SERVER_PORT));
+        // panel.add(portField);
 
         JButton confirmButton = new JButton("Confirmar");
         confirmButton.addActionListener(new ActionListener() {
@@ -47,7 +47,7 @@ public class ConnectionDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 try {
                     ip = ipField.getText().trim();
-                    port = Integer.parseInt(portField.getText().trim());
+                    // port = Integer.parseInt(portField.getText().trim());
                     confirmed = true;
                     dispose();
                 } catch (NumberFormatException ex) {
