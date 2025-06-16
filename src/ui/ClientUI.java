@@ -1,15 +1,29 @@
 package src.ui;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.nio.charset.StandardCharsets;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
-import src.entities.Client;
+import src.Client;
 import src.utils.Constants;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 
 public class ClientUI {
     private JFrame frame = new JFrame("Seega");
@@ -20,16 +34,14 @@ public class ClientUI {
     private JButton resignButton;
     private Client client;
     private int clientId;
-    private PrintWriter out;
     private boolean centerBlocked = true;
 
     private int selectedRow = -1;
     private int selectedCol = -1;
     private boolean isPositioningPhase = true;
 
-    public ClientUI(int clientId, PrintWriter out, Client client) {
+    public ClientUI(int clientId, Client client) {
         this.clientId = clientId;
-        this.out = out;
         this.client = client;
 
         frame.setTitle("Seega - Cliente " + clientId);
@@ -72,11 +84,9 @@ public class ClientUI {
             String msg = inputField.getText();
             if (!msg.trim().isEmpty() && !msg.equals("Digite sua mensagem...")) {
                 if (msg.equals("/desistir")) {
-                    out.println("/desistir");
-                    inputField.setText("");
                     appendMessage("Você desistiu da partida!");
                 } else {
-                    out.println(msg);
+                    client.sendMessage(msg);
                     inputField.setText("");
                 }
             }
@@ -155,7 +165,6 @@ public class ClientUI {
                     JOptionPane.WARNING_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                out.println("/desistir");
                 appendMessage(Constants.GAVE_UP_THE_GAME);
                 resignButton.setEnabled(false);
             }
@@ -368,4 +377,22 @@ public class ClientUI {
         SwingUtilities.invokeLater(() -> resignButton.setEnabled(true));
     }
 
+    public void updateBoard(String[][] board) {
+        for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+            for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                if (!board[row][col].isEmpty()) {
+                    int player = board[row][col].equals(Constants.PLAYER_1_SYMBOL) ? 1 : 2;
+                    updateBoard(player, row, col);
+                }
+            }
+        }
+    }
+
+    public void setCurrentPlayer(int player) {
+        turnLabel.setText("Turno do Jogador " + player);
+    }
+
+    public void setCurrentTurn(int turn) {
+        turnLabel.setText("Turno " + turn);
+    }
 }

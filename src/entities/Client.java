@@ -1,7 +1,10 @@
 package src.entities;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -41,7 +44,7 @@ public class Client {
                 clientId = Integer.parseInt(idMessage.substring(Constants.ID_PREFIX.length()));
             }
 
-            clientUI = new ClientUI(clientId, out, this);
+            // clientUI = new ClientUI(clientId, out, this);
             clientService = new ClientService(clientUI, clientId, out);
 
             if (clientId == 1) {
