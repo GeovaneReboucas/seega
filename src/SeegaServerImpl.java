@@ -53,6 +53,10 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
         // solicita ao primeiro cliente que escolha
         if (clients.size() == 2 && !startingPlayerChosen) {
             clients.get(0).promptForStartingPlayer();
+            // Notifica todos os clientes que o jogo começou
+            for (SeegaClient c : clients) {
+                c.showMessage("Jogo iniciado! Aguardando escolha do jogador inicial...");
+            }
         }
 
         return clientId;
@@ -70,6 +74,12 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
     public synchronized void setStartingPlayer(int player) throws RemoteException {
         currentPlayer = player;
         startingPlayerChosen = true;
+
+        // Notifica todos os clientes sobre o jogador inicial
+        for (SeegaClient client : clients) {
+            client.showMessage("Jogador " + player + " começa!");
+        }
+
         notifyAllClients();
     }
 

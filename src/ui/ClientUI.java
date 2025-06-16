@@ -395,4 +395,8 @@ public class ClientUI {
     public void setCurrentTurn(int turn) {
         turnLabel.setText("Turno " + turn);
     }
+
+    public void setTitle(String title) {
+        frame.setTitle(title);
+    }
 }

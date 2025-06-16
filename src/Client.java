@@ -42,6 +42,7 @@ public class Client {
 
             // Atualiza a referência da UI no cliente RMI
             client.setClientUI(clientUI);
+            client.setClientId(clientId);
 
             // Se for o primeiro cliente, solicita a escolha do jogador inicial
             if (clientId == 1) {
