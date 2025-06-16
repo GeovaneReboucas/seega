@@ -296,4 +296,13 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
         return captureOccurred;
     }
 
+    @Override
+    public synchronized void playerResigns(int playerId) throws RemoteException {
+        int winner = (playerId == 1) ? 2 : 1;
+        broadcastMessage("Jogador " + playerId + " desistiu! Jogador " + winner + " venceu!");
+        for (SeegaClient client : clients) {
+            client.showGameOver(winner);
+        }
+    }
+
 }

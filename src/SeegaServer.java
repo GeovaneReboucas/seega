@@ -22,5 +22,6 @@ public interface SeegaServer extends Remote {
 
     void broadcastMessage(String message) throws RemoteException;
 
-    // void checkCaptures(int row, int col, int player) throws RemoteException;
+    void playerResigns(int playerId) throws RemoteException;
+
 }

@@ -9,6 +9,7 @@ import java.awt.GridLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.nio.charset.StandardCharsets;
+import java.rmi.RemoteException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -85,12 +86,8 @@ public class ClientUI {
         inputField.addActionListener(e -> {
             String msg = inputField.getText();
             if (!msg.trim().isEmpty() && !msg.equals("Digite sua mensagem...")) {
-                if (msg.equals("/desistir")) {
-                    appendMessage("Você desistiu da partida!");
-                } else {
-                    client.sendMessage(msg);
-                    inputField.setText("");
-                }
+                client.sendMessage(msg);
+                inputField.setText("");
             }
         });
 
@@ -134,8 +131,14 @@ public class ClientUI {
                                 updateAvailableMoves();
                             }
                         } else {
-                            // Tentar mover a peça selecionada para esta posição
-                            if (button.getText().isEmpty() && isValidMove(selectedRow, selectedCol, r, c)) {
+                            if (r == selectedRow && c == selectedCol) {
+                                // Deseleciona
+                                button.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+                                selectedRow = -1;
+                                selectedCol = -1;
+                                updateAvailableMoves();
+                            } else if (button.getText().isEmpty() && isValidMove(selectedRow, selectedCol, r, c)) {
+                                // Tentar mover a peça selecionada para esta posição
                                 client.sendMove(selectedRow, selectedCol, r, c);
                                 // Limpa a seleção
                                 boardButtons[selectedRow][selectedCol]
@@ -175,8 +178,17 @@ public class ClientUI {
                     JOptionPane.WARNING_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                appendMessage(Constants.GAVE_UP_THE_GAME);
-                resignButton.setEnabled(false);
+                try {
+                    client.getServer().playerResigns(clientId);
+                    appendMessage(Constants.GAVE_UP_THE_GAME);
+                    resignButton.setEnabled(false);
+                } catch (RemoteException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame,
+                            "Erro ao comunicar com o servidor",
+                            "Erro",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -290,8 +302,13 @@ public class ClientUI {
                     // Fase de movimentação - a casa central deve se comportar como qualquer outra
                     if (currentPlayer == clientId) {
                         if (selectedRow == -1 && selectedCol == -1) {
+                            // Se nenhuma peça está selecionada, habilita apenas as peças do jogador
                             button.setEnabled(buttonText.equals(currentSymbol));
+                        } else if (row == selectedRow && col == selectedCol) {
+                            // A peça selecionada deve estar sempre habilitada
+                            button.setEnabled(true);
                         } else {
+                            // Se uma peça está selecionada, habilita apenas as casas vazias adjacentes
                             button.setEnabled(buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
                         }
                     } else {
@@ -304,18 +321,20 @@ public class ClientUI {
 
     private void updateAvailableMoves() {
         if (!isPositioningPhase && currentPlayer == clientId) {
+            String currentSymbol = (clientId == 1) ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL;
+
             for (int row = 0; row < Constants.BOARD_SIZE; row++) {
                 for (int col = 0; col < Constants.BOARD_SIZE; col++) {
                     JButton button = boardButtons[row][col];
                     String buttonText = button.getText();
 
                     if (selectedRow == -1 && selectedCol == -1) {
-                        // Se nenhuma peça está selecionada, habilita apenas as peças do jogador
-                        button.setEnabled(buttonText
-                                .equals(clientId == 1 ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL));
+                        // Habilita todas as peças do jogador
+                        button.setEnabled(buttonText.equals(currentSymbol));
                     } else {
-                        // Se uma peça está selecionada, habilita apenas as casas vazias adjacentes
-                        button.setEnabled(buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
+                        // Habilita apenas casas vazias adjacentes
+                        button.setEnabled(buttonText.isEmpty() &&
+                                isValidMove(selectedRow, selectedCol, row, col));
                     }
                 }
             }

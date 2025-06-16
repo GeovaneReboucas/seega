@@ -1,7 +1,11 @@
 package src.handlers;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
 import src.services.BroadcastService;
 import src.services.ServerService;
 import src.utils.Constants;
@@ -14,8 +18,8 @@ public class ClientHandler implements Runnable {
     private ServerService serverService;
     private BroadcastService broadcastService;
 
-    public ClientHandler(Socket socket, int clientId, ServerService serverService, 
-                        BroadcastService broadcastService) throws IOException {
+    public ClientHandler(Socket socket, int clientId, ServerService serverService,
+            BroadcastService broadcastService) throws IOException {
         this.socket = socket;
         this.clientId = clientId;
         this.serverService = serverService;

@@ -81,10 +81,14 @@ public class Client {
 
     public void sendMessage(String message) {
         try {
-            server.broadcastMessage(clientId + ": " + message);
+            server.broadcastMessage("Cliente " + clientId + ": " + message);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+    }
+
+    public SeegaServer getServer() {
+        return this.server;
     }
 
     public static void main(String[] args) {
