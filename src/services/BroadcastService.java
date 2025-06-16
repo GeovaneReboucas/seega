@@ -6,7 +6,6 @@ import java.util.List;
 
 import src.handlers.ClientHandler;
 
-
 public class BroadcastService {
     private List<ClientHandler> clients;
 

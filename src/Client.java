@@ -8,6 +8,7 @@ import javax.swing.SwingUtilities;
 
 import src.ui.ClientUI;
 import src.ui.ConnectionDialog;
+import src.utils.Constants;
 
 public class Client {
     private SeegaServer server;
@@ -59,11 +60,23 @@ public class Client {
     }
 
     public void sendMove(int row, int col) {
-        client.makeMove(row, col);
+        try {
+            if (client.getCurrentTurn() <= Constants.PLACEMENT_PHASE_END_TURN) {
+                client.makeMove(row, col);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendMove(int fromRow, int fromCol, int toRow, int toCol) {
-        client.movePiece(fromRow, fromCol, toRow, toCol);
+        try {
+            if (client.getCurrentTurn() > Constants.PLACEMENT_PHASE_END_TURN) {
+                client.movePiece(fromRow, fromCol, toRow, toCol);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendMessage(String message) {

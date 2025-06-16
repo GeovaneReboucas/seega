@@ -89,7 +89,8 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             return false;
         }
 
-        // Verifica se está tentando jogar no centro bloqueado
+        // Verifica se está tentando jogar no centro bloqueado durante a fase de
+        // posicionamento
         if (currentTurn <= Constants.PLACEMENT_PHASE_END_TURN &&
                 row == Constants.CENTER_ROW && col == Constants.CENTER_COL) {
             return false;
@@ -99,14 +100,8 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             board[row][col] = (player == 1) ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL;
             movesInCurrentBlock++;
 
-            if (currentTurn == Constants.PLACEMENT_PHASE_END_TURN) {
-                board[Constants.CENTER_ROW][Constants.CENTER_COL] = "";
-                // Notifica os clientes que o centro foi desbloqueado
-                for (SeegaClient client : clients) {
-                    client.showMessage("Fase de posicionamento terminada! Centro desbloqueado.");
-                }
-            }
-
+            // Remove o desbloqueio do centro aqui - será feito apenas no
+            // checkPhaseTransition
             currentTurn++;
             checkPhaseTransition();
 
@@ -192,10 +187,12 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
 
     private void checkPhaseTransition() throws RemoteException {
         if (currentTurn == Constants.MOVEMENT_PHASE_START_TURN) {
-            board[Constants.CENTER_ROW][Constants.CENTER_COL] = "";
-            // Notifica os clientes sobre a mudança de fase
-            for (SeegaClient client : clients) {
-                client.showMessage("Fase de movimentação iniciada! Centro desbloqueado.");
+            // Desbloqueia o centro apenas uma vez, no início da fase de movimentação
+            if (board[Constants.CENTER_ROW][Constants.CENTER_COL].equals("BLOCKED")) {
+                board[Constants.CENTER_ROW][Constants.CENTER_COL] = "";
+                for (SeegaClient client : clients) {
+                    client.showMessage("Fase de movimentação iniciada! Centro desbloqueado.");
+                }
             }
         }
     }

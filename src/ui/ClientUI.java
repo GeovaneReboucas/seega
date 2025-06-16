@@ -130,7 +130,6 @@ public class ClientUI {
                                 selectedRow = r;
                                 selectedCol = c;
                                 button.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
-                                // Atualiza os botões disponíveis para movimento
                                 updateAvailableMoves();
                             }
                         } else {
@@ -142,13 +141,13 @@ public class ClientUI {
                                         .setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
                                 selectedRow = -1;
                                 selectedCol = -1;
+                                updateAvailableMoves();
                             } else {
                                 // Se clicou em uma posição inválida, desmarca a seleção
                                 boardButtons[selectedRow][selectedCol]
                                         .setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
                                 selectedRow = -1;
                                 selectedCol = -1;
-                                // Atualiza os botões disponíveis
                                 updateAvailableMoves();
                             }
                         }
@@ -238,11 +237,23 @@ public class ClientUI {
 
     public void updateTurnInfo(int currentPlayer, int turnNumber) {
         SwingUtilities.invokeLater(() -> {
-            if (turnNumber >= 25) {
-                isPositioningPhase = false;
+            // Atualiza a fase do jogo
+            isPositioningPhase = turnNumber < Constants.MOVEMENT_PHASE_START_TURN;
+            centerBlocked = isPositioningPhase;
+
+            JButton centerButton = boardButtons[2][2];
+            if (centerBlocked) {
+                centerButton.setText("BLOCKED");
+                centerButton.setBackground(Color.RED);
+                centerButton.setForeground(Color.WHITE);
+                centerButton.setEnabled(false);
+            } else {
+                centerButton.setText("");
+                centerButton.setBackground(Color.WHITE);
+                centerButton.setEnabled(true);
             }
 
-            // Limpar seleção quando o turno muda
+            // Restante do método permanece igual...
             if (selectedRow != -1 && selectedCol != -1) {
                 boardButtons[selectedRow][selectedCol].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
                 selectedRow = -1;
@@ -258,25 +269,36 @@ public class ClientUI {
                 turnLabel.setForeground(Color.RED);
             }
 
-            // Habilitar/desabilitar botões conforme o turno
-            for (int row = 0; row < 5; row++) {
-                for (int col = 0; col < 5; col++) {
-                    String currentSymbol = (clientId == 1) ? "O" : "X";
-                    boolean isMyPiece = boardButtons[row][col].getText().equals(currentSymbol);
+            updateBoardState(currentPlayer);
+        });
+    }
 
-                    if (isPositioningPhase) {
-                        boardButtons[row][col].setEnabled(
-                                boardButtons[row][col].getText().isEmpty() &&
-                                        !(centerBlocked && row == 2 && col == 2) &&
-                                        currentPlayer == clientId);
+    private void updateBoardState(int currentPlayer) {
+        for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+            for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                JButton button = boardButtons[row][col];
+                String buttonText = button.getText();
+                String currentSymbol = (clientId == 1) ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL;
+
+                if (isPositioningPhase) {
+                    // Fase de posicionamento
+                    button.setEnabled(buttonText.isEmpty() &&
+                            !(centerBlocked && row == Constants.CENTER_ROW && col == Constants.CENTER_COL) &&
+                            currentPlayer == clientId);
+                } else {
+                    // Fase de movimentação - a casa central deve se comportar como qualquer outra
+                    if (currentPlayer == clientId) {
+                        if (selectedRow == -1 && selectedCol == -1) {
+                            button.setEnabled(buttonText.equals(currentSymbol));
+                        } else {
+                            button.setEnabled(buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
+                        }
                     } else {
-                        boardButtons[row][col].setEnabled(
-                                (isMyPiece || boardButtons[row][col].getText().isEmpty()) &&
-                                        currentPlayer == clientId);
+                        button.setEnabled(false);
                     }
                 }
             }
-        });
+        }
     }
 
     private void updateAvailableMoves() {
@@ -305,13 +327,30 @@ public class ClientUI {
     }
 
     // No método updateBoard do ClientUI.java, modifique para:
-    public void updateBoard(int player, int row, int col) {
+    public void updateBoard(String[][] board) {
         SwingUtilities.invokeLater(() -> {
-            String symbol = (player == 1) ? "O" : "X";
-            boardButtons[row][col].setText(symbol);
-            boardButtons[row][col].setForeground(player == 1 ? Color.BLUE : Color.RED);
-            // Não desabilitar o botão na fase de movimentação
-            boardButtons[row][col].setEnabled(!isPositioningPhase || boardButtons[row][col].getText().isEmpty());
+            for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+                for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                    JButton button = boardButtons[row][col];
+                    String cellValue = board[row][col];
+
+                    if (cellValue.equals("BLOCKED")) {
+                        // Tratamento especial para a casa central bloqueada
+                        button.setText("BLOCKED");
+                        button.setBackground(Color.RED);
+                        button.setForeground(Color.WHITE); // Texto branco para melhor contraste
+                        button.setEnabled(false);
+                    } else if (cellValue.isEmpty()) {
+                        button.setText("");
+                        button.setBackground(Color.WHITE);
+                    } else {
+                        button.setText(cellValue);
+                        button.setBackground(Color.WHITE);
+                        button.setForeground(cellValue.equals(Constants.PLAYER_1_SYMBOL) ? Color.BLUE : Color.RED);
+                    }
+                }
+            }
+            updateBoardState(currentPlayer);
         });
     }
 
@@ -319,14 +358,17 @@ public class ClientUI {
         SwingUtilities.invokeLater(() -> {
             // Limpa a posição original
             boardButtons[fromRow][fromCol].setText("");
-            boardButtons[fromRow][fromCol].setEnabled(true);
-            boardButtons[fromRow][fromCol].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+            boardButtons[fromRow][fromCol].setBackground(Color.WHITE);
 
             // Coloca a peça na nova posição
-            String symbol = (player == 1) ? "O" : "X";
+            String symbol = (player == 1) ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL;
             boardButtons[toRow][toCol].setText(symbol);
+            boardButtons[toRow][toCol]
+                    .setBackground(toRow == 2 && toCol == 2 && centerBlocked ? Color.RED : Color.WHITE);
             boardButtons[toRow][toCol].setForeground(player == 1 ? Color.BLUE : Color.RED);
-            boardButtons[toRow][toCol].setEnabled(false);
+
+            // Atualiza o estado do tabuleiro
+            updateBoardState(currentPlayer);
         });
     }
 
@@ -390,42 +432,6 @@ public class ClientUI {
 
     public void enableResignButton() {
         SwingUtilities.invokeLater(() -> resignButton.setEnabled(true));
-    }
-
-    public void updateBoard(String[][] board) {
-        for (int row = 0; row < Constants.BOARD_SIZE; row++) {
-            for (int col = 0; col < Constants.BOARD_SIZE; col++) {
-                if (!board[row][col].isEmpty()) {
-                    int player = board[row][col].equals(Constants.PLAYER_1_SYMBOL) ? 1 : 2;
-                    updateBoard(player, row, col);
-                }
-            }
-        }
-
-        // Atualiza o estado dos botões após atualizar o tabuleiro
-        if (!isPositioningPhase) {
-            for (int row = 0; row < Constants.BOARD_SIZE; row++) {
-                for (int col = 0; col < Constants.BOARD_SIZE; col++) {
-                    JButton button = boardButtons[row][col];
-                    String buttonText = button.getText();
-
-                    if (currentPlayer == clientId) {
-                        // Se for o turno do jogador
-                        if (selectedRow == -1 && selectedCol == -1) {
-                            // Se nenhuma peça está selecionada, habilita apenas as peças do jogador
-                            button.setEnabled(buttonText
-                                    .equals(clientId == 1 ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL));
-                        } else {
-                            // Se uma peça está selecionada, habilita apenas as casas vazias adjacentes
-                            button.setEnabled(buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
-                        }
-                    } else {
-                        // Se não for o turno do jogador, desabilita todos os botões
-                        button.setEnabled(false);
-                    }
-                }
-            }
-        }
     }
 
     public void setCurrentPlayer(int player) {

@@ -41,8 +41,9 @@ public class SeegaClientImpl extends UnicastRemoteObject implements SeegaClient 
             SwingUtilities.invokeLater(() -> {
                 clientUI.updateBoard(board);
                 // Verifica se o centro está desbloqueado
-                boolean centerBlocked = !board[Constants.CENTER_ROW][Constants.CENTER_COL].isEmpty();
-                clientUI.updateCenterBlock(centerBlocked);
+                // boolean centerBlocked =
+                // !board[Constants.CENTER_ROW][Constants.CENTER_COL].isEmpty();
+                // clientUI.updateCenterBlock(centerBlocked);
             });
         }
     }
@@ -125,5 +126,9 @@ public class SeegaClientImpl extends UnicastRemoteObject implements SeegaClient 
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getCurrentTurn() throws RemoteException {
+        return server.getCurrentTurn();
     }
 }
