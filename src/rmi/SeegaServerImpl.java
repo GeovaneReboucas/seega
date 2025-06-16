@@ -1,4 +1,4 @@
-package src;
+package src.rmi;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -35,7 +35,7 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
                 board[i][j] = "";
             }
         }
-        // Bloqueia o centro inicialmente
+
         board[Constants.CENTER_ROW][Constants.CENTER_COL] = "BLOCKED";
     }
 
@@ -44,16 +44,13 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
         int clientId = nextClientId++;
         clients.add(client);
 
-        // Envia o estado atual do jogo para o novo cliente
         client.updateBoard(board);
         client.setCurrentPlayer(currentPlayer);
         client.setCurrentTurn(currentTurn);
 
-        // Se for o segundo cliente e o jogador inicial ainda não foi escolhido,
-        // solicita ao primeiro cliente que escolha
         if (clients.size() == 2 && !startingPlayerChosen) {
             clients.get(0).promptForStartingPlayer();
-            // Notifica todos os clientes que o jogo começou
+
             for (SeegaClient c : clients) {
                 c.showMessage("Jogo iniciado! Aguardando escolha do jogador inicial...");
             }
@@ -75,7 +72,6 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
         currentPlayer = player;
         startingPlayerChosen = true;
 
-        // Notifica todos os clientes sobre o jogador inicial
         for (SeegaClient client : clients) {
             client.showMessage("Jogador " + player + " começa!");
         }
@@ -89,8 +85,6 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             return false;
         }
 
-        // Verifica se está tentando jogar no centro bloqueado durante a fase de
-        // posicionamento
         if (currentTurn <= Constants.PLACEMENT_PHASE_END_TURN &&
                 row == Constants.CENTER_ROW && col == Constants.CENTER_COL) {
             return false;
@@ -100,8 +94,6 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             board[row][col] = (player == 1) ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL;
             movesInCurrentBlock++;
 
-            // Remove o desbloqueio do centro aqui - será feito apenas no
-            // checkPhaseTransition
             currentTurn++;
             checkPhaseTransition();
 
@@ -134,33 +126,27 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             return false;
         }
 
-        // Verifica movimento adjacente
         if (Math.abs(fromRow - toRow) + Math.abs(fromCol - toCol) != 1) {
             return false;
         }
 
-        // Executa o movimento
         board[fromRow][fromCol] = "";
         board[toRow][toCol] = playerSymbol;
 
-        // Verifica capturas
         boolean captureOccurred = checkCaptures(player, toRow, toCol);
 
         if (!captureOccurred) {
             int nextPlayer = (currentPlayer == 1) ? 2 : 1;
 
-            // Verifica se o próximo jogador tem movimentos válidos
             if (!hasValidMoves(nextPlayer)) {
                 broadcastMessage("Jogador " + nextPlayer + " não tem movimentos válidos! Turno passado.");
 
-                // Se nem o jogador atual tem movimentos, fim de jogo
                 if (!hasValidMoves(currentPlayer)) {
                     broadcastMessage("Nenhum jogador tem movimentos válidos!");
                     checkGameEnd();
                     return true;
                 }
 
-                // Mantém o mesmo jogador para o próximo turno
                 currentTurn++;
                 notifyAllClients();
                 return true;
@@ -182,7 +168,7 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
         for (int row = 0; row < Constants.BOARD_SIZE; row++) {
             for (int col = 0; col < Constants.BOARD_SIZE; col++) {
                 if (board[row][col].equals(playerSymbol)) {
-                    // Verifica todas as direções possíveis
+
                     if (row > 0 && board[row - 1][col].isEmpty())
                         return true;
                     if (row < Constants.BOARD_SIZE - 1 && board[row + 1][col].isEmpty())
@@ -214,7 +200,7 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
 
     private void checkPhaseTransition() throws RemoteException {
         if (currentTurn == Constants.MOVEMENT_PHASE_START_TURN) {
-            // Desbloqueia o centro apenas uma vez, no início da fase de movimentação
+
             if (board[Constants.CENTER_ROW][Constants.CENTER_COL].equals("BLOCKED")) {
                 board[Constants.CENTER_ROW][Constants.CENTER_COL] = "";
                 for (SeegaClient client : clients) {
@@ -235,7 +221,6 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
         boolean player1HasPieces = false;
         boolean player2HasPieces = false;
 
-        // Verifica peças restantes
         for (int row = 0; row < Constants.BOARD_SIZE; row++) {
             for (int col = 0; col < Constants.BOARD_SIZE; col++) {
                 if (board[row][col].equals(Constants.PLAYER_1_SYMBOL)) {
@@ -246,7 +231,6 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             }
         }
 
-        // Determina o resultado
         if (!player1HasPieces || !player2HasPieces) {
             int winner = !player1HasPieces ? 2 : 1;
             broadcastMessage("Jogador 2 venceu!");
@@ -270,7 +254,6 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             if (adjacentRow >= 0 && adjacentRow < Constants.BOARD_SIZE &&
                     adjacentCol >= 0 && adjacentCol < Constants.BOARD_SIZE) {
 
-                // Verifica se é uma peça adversária E NÃO está no centro
                 if (board[adjacentRow][adjacentCol].equals(opponentSymbol) &&
                         !(adjacentRow == Constants.CENTER_ROW && adjacentCol == Constants.CENTER_COL)) {
 

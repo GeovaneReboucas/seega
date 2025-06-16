@@ -24,7 +24,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
-import src.Client;
+import src.entities.Client;
 import src.utils.Constants;
 
 public class ClientUI {

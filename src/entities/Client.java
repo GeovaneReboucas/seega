@@ -1,26 +1,22 @@
 package src.entities;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import src.services.ClientService;
+import src.rmi.SeegaClientImpl;
+import src.rmi.SeegaServer;
 import src.ui.ClientUI;
 import src.ui.ConnectionDialog;
 import src.utils.Constants;
 
 public class Client {
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
+    private SeegaServer server;
+    private SeegaClientImpl client;
     private ClientUI clientUI;
     private int clientId;
-    private ClientService clientService;
 
     public Client() {
         ConnectionDialog connectionDialog = new ConnectionDialog(null);
@@ -35,62 +31,66 @@ public class Client {
 
     private void initializeConnection(String serverIp, int serverPort) {
         try {
-            socket = new Socket(serverIp, serverPort);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
+            // Conecta ao servidor RMI
+            server = (SeegaServer) Naming.lookup("//" + serverIp + "/SeegaServer");
 
-            String idMessage = in.readLine();
-            if (idMessage != null && idMessage.startsWith(Constants.ID_PREFIX)) {
-                clientId = Integer.parseInt(idMessage.substring(Constants.ID_PREFIX.length()));
-            }
+            // Cria o cliente RMI temporário para registro
+            client = new SeegaClientImpl(null, 0, server);
 
-            // clientUI = new ClientUI(clientId, out, this);
-            clientService = new ClientService(clientUI, clientId, out);
+            // Registra o cliente no servidor e obtém o ID
+            clientId = server.registerClient(client);
 
+            // Cria a interface do usuário com o ID correto
+            clientUI = new ClientUI(clientId, this);
+
+            // Atualiza a referência da UI no cliente RMI
+            client.setClientUI(clientUI);
+            client.setClientId(clientId);
+
+            // Se for o primeiro cliente, solicita a escolha do jogador inicial
             if (clientId == 1) {
-                clientService.promptForStartingPlayer();
+                client.promptForStartingPlayer();
             }
 
-            startMessageReceiver();
-
-        } catch (IOException e) {
-            if (clientService != null) {
-                clientService.handleConnectionError(e);
-            } else {
-                JOptionPane.showMessageDialog(null,
-                        "Não foi possível conectar ao servidor.\nVerifique o IP e a porta e tente novamente.",
-                        "Erro de Conexão",
-                        JOptionPane.ERROR_MESSAGE);
-                System.exit(1);
-            }
-        }
-    }
-
-    private void startMessageReceiver() {
-        new Thread(this::receiveMessages).start();
-    }
-
-    private void receiveMessages() {
-        try {
-            String msg;
-            while ((msg = in.readLine()) != null) {
-                clientService.processMessage(msg);
-            }
-        } catch (IOException e) {
-            clientService.handleDisconnection();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                    "Não foi possível conectar ao servidor.\nVerifique o IP e a porta e tente novamente.",
+                    "Erro de Conexão",
+                    JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
         }
     }
 
     public void sendMove(int row, int col) {
-        if (clientService.isMyTurn()) {
-            out.println(Constants.MOVE_PREFIX + row + ":" + col);
+        try {
+            if (client.getCurrentTurn() <= Constants.PLACEMENT_PHASE_END_TURN) {
+                client.makeMove(row, col);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
     }
 
     public void sendMove(int fromRow, int fromCol, int toRow, int toCol) {
-        if (clientService.isMyTurn()) {
-            out.println(Constants.MOVE_PIECE_PREFIX + fromRow + ":" + fromCol + ":" + toRow + ":" + toCol);
+        try {
+            if (client.getCurrentTurn() > Constants.PLACEMENT_PHASE_END_TURN) {
+                client.movePiece(fromRow, fromCol, toRow, toCol);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
+    }
+
+    public void sendMessage(String message) {
+        try {
+            server.broadcastMessage("Cliente " + clientId + ": " + message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public SeegaServer getServer() {
+        return this.server;
     }
 
     public static void main(String[] args) {
