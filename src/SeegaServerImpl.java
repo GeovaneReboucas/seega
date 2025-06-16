@@ -101,6 +101,10 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
 
             if (currentTurn == Constants.PLACEMENT_PHASE_END_TURN) {
                 board[Constants.CENTER_ROW][Constants.CENTER_COL] = "";
+                // Notifica os clientes que o centro foi desbloqueado
+                for (SeegaClient client : clients) {
+                    client.showMessage("Fase de posicionamento terminada! Centro desbloqueado.");
+                }
             }
 
             currentTurn++;
@@ -186,9 +190,13 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
         return currentTurn;
     }
 
-    private void checkPhaseTransition() {
+    private void checkPhaseTransition() throws RemoteException {
         if (currentTurn == Constants.MOVEMENT_PHASE_START_TURN) {
             board[Constants.CENTER_ROW][Constants.CENTER_COL] = "";
+            // Notifica os clientes sobre a mudança de fase
+            for (SeegaClient client : clients) {
+                client.showMessage("Fase de movimentação iniciada! Centro desbloqueado.");
+            }
         }
     }
 

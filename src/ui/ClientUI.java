@@ -39,6 +39,7 @@ public class ClientUI {
     private int selectedRow = -1;
     private int selectedCol = -1;
     private boolean isPositioningPhase = true;
+    private int currentPlayer = 1;
 
     public ClientUI(int clientId, Client client) {
         this.clientId = clientId;
@@ -121,7 +122,7 @@ public class ClientUI {
                         }
                     } else {
                         // Fase de movimentação (turno 25+)
-                        String currentSymbol = (clientId == 1) ? "O" : "X";
+                        String currentSymbol = (clientId == 1) ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL;
 
                         if (selectedRow == -1 && selectedCol == -1) {
                             // Selecionar uma peça para mover
@@ -129,18 +130,27 @@ public class ClientUI {
                                 selectedRow = r;
                                 selectedCol = c;
                                 button.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
+                                // Atualiza os botões disponíveis para movimento
+                                updateAvailableMoves();
                             }
                         } else {
                             // Tentar mover a peça selecionada para esta posição
                             if (button.getText().isEmpty() && isValidMove(selectedRow, selectedCol, r, c)) {
-                                // Enviar o movimento para o servidor
                                 client.sendMove(selectedRow, selectedCol, r, c);
+                                // Limpa a seleção
+                                boardButtons[selectedRow][selectedCol]
+                                        .setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+                                selectedRow = -1;
+                                selectedCol = -1;
+                            } else {
+                                // Se clicou em uma posição inválida, desmarca a seleção
+                                boardButtons[selectedRow][selectedCol]
+                                        .setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+                                selectedRow = -1;
+                                selectedCol = -1;
+                                // Atualiza os botões disponíveis
+                                updateAvailableMoves();
                             }
-                            // Deselecionar independentemente do movimento ser válido ou não
-                            boardButtons[selectedRow][selectedCol]
-                                    .setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-                            selectedRow = -1;
-                            selectedCol = -1;
                         }
                     }
                 });
@@ -269,24 +279,29 @@ public class ClientUI {
         });
     }
 
-    // Método para verificar se um movimento é válido
+    private void updateAvailableMoves() {
+        if (!isPositioningPhase && currentPlayer == clientId) {
+            for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+                for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                    JButton button = boardButtons[row][col];
+                    String buttonText = button.getText();
+
+                    if (selectedRow == -1 && selectedCol == -1) {
+                        // Se nenhuma peça está selecionada, habilita apenas as peças do jogador
+                        button.setEnabled(buttonText
+                                .equals(clientId == 1 ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL));
+                    } else {
+                        // Se uma peça está selecionada, habilita apenas as casas vazias adjacentes
+                        button.setEnabled(buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
+                    }
+                }
+            }
+        }
+    }
+
     private boolean isValidMove(int fromRow, int fromCol, int toRow, int toCol) {
-        // Verifica se é uma peça do jogador atual
-        String currentSymbol = (clientId == 1) ? "O" : "X";
-        if (!boardButtons[fromRow][fromCol].getText().equals(currentSymbol)) {
-            return false;
-        }
-
-        // Verifica se a casa de destino está vazia
-        if (!boardButtons[toRow][toCol].getText().isEmpty()) {
-            return false;
-        }
-
-        // Verifica se é um movimento adjacente (horizontal ou vertical)
-        int rowDiff = Math.abs(toRow - fromRow);
-        int colDiff = Math.abs(toCol - fromCol);
-
-        return (rowDiff == 1 && colDiff == 0) || (rowDiff == 0 && colDiff == 1);
+        // Verifica se o movimento é adjacente (horizontal ou vertical)
+        return (Math.abs(fromRow - toRow) + Math.abs(fromCol - toCol)) == 1;
     }
 
     // No método updateBoard do ClientUI.java, modifique para:
@@ -386,14 +401,102 @@ public class ClientUI {
                 }
             }
         }
+
+        // Atualiza o estado dos botões após atualizar o tabuleiro
+        if (!isPositioningPhase) {
+            for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+                for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                    JButton button = boardButtons[row][col];
+                    String buttonText = button.getText();
+
+                    if (currentPlayer == clientId) {
+                        // Se for o turno do jogador
+                        if (selectedRow == -1 && selectedCol == -1) {
+                            // Se nenhuma peça está selecionada, habilita apenas as peças do jogador
+                            button.setEnabled(buttonText
+                                    .equals(clientId == 1 ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL));
+                        } else {
+                            // Se uma peça está selecionada, habilita apenas as casas vazias adjacentes
+                            button.setEnabled(buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
+                        }
+                    } else {
+                        // Se não for o turno do jogador, desabilita todos os botões
+                        button.setEnabled(false);
+                    }
+                }
+            }
+        }
     }
 
     public void setCurrentPlayer(int player) {
-        turnLabel.setText("Turno do Jogador " + player);
+        SwingUtilities.invokeLater(() -> {
+            currentPlayer = player;
+            turnLabel.setText("Turno do Jogador " + player);
+
+            // Atualiza o estado dos botões do tabuleiro
+            if (!isPositioningPhase) {
+                for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+                    for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                        JButton button = boardButtons[row][col];
+                        String buttonText = button.getText();
+
+                        if (player == clientId) {
+                            // Se for o turno do jogador
+                            if (selectedRow == -1 && selectedCol == -1) {
+                                // Se nenhuma peça está selecionada, habilita apenas as peças do jogador
+                                button.setEnabled(buttonText
+                                        .equals(clientId == 1 ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL));
+                            } else {
+                                // Se uma peça está selecionada, habilita apenas as casas vazias adjacentes
+                                button.setEnabled(
+                                        buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
+                            }
+                        } else {
+                            // Se não for o turno do jogador, desabilita todos os botões
+                            button.setEnabled(false);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void setCurrentTurn(int turn) {
-        turnLabel.setText("Turno " + turn);
+        SwingUtilities.invokeLater(() -> {
+            isPositioningPhase = turn < Constants.MOVEMENT_PHASE_START_TURN;
+            turnLabel.setText("Turno " + turn);
+
+            // Atualiza o estado dos botões do tabuleiro
+            for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+                for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                    JButton button = boardButtons[row][col];
+                    String buttonText = button.getText();
+
+                    if (isPositioningPhase) {
+                        // Na fase de posicionamento, habilita apenas casas vazias
+                        button.setEnabled(buttonText.isEmpty()
+                                && !(centerBlocked && row == Constants.CENTER_ROW && col == Constants.CENTER_COL));
+                    } else {
+                        // Na fase de movimentação
+                        if (currentPlayer == clientId) {
+                            // Se for o turno do jogador
+                            if (selectedRow == -1 && selectedCol == -1) {
+                                // Se nenhuma peça está selecionada, habilita apenas as peças do jogador
+                                button.setEnabled(buttonText
+                                        .equals(clientId == 1 ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL));
+                            } else {
+                                // Se uma peça está selecionada, habilita apenas as casas vazias adjacentes
+                                button.setEnabled(
+                                        buttonText.isEmpty() && isValidMove(selectedRow, selectedCol, row, col));
+                            }
+                        } else {
+                            // Se não for o turno do jogador, desabilita todos os botões
+                            button.setEnabled(false);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public void setTitle(String title) {

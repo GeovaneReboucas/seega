@@ -1,7 +1,7 @@
 package src.services;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -100,7 +100,7 @@ public class ClientService {
         int player = Integer.parseInt(parts[1]);
         int row = Integer.parseInt(parts[2]);
         int col = Integer.parseInt(parts[3]);
-        clientUI.updateBoard(player, row, col);
+        // clientUI.updateBoard(player, row, col);
     }
 
     public void handleMovePieceMessage(String msg) {
