@@ -21,4 +21,6 @@ public interface SeegaServer extends Remote {
     int registerClient(SeegaClient client) throws RemoteException;
 
     void broadcastMessage(String message) throws RemoteException;
+
+    // void checkCaptures(int row, int col, int player) throws RemoteException;
 }

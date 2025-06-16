@@ -131,4 +131,13 @@ public class SeegaClientImpl extends UnicastRemoteObject implements SeegaClient 
     public int getCurrentTurn() throws RemoteException {
         return server.getCurrentTurn();
     }
+
+    @Override
+    public void capturePiece(int row, int col) throws RemoteException {
+        if (clientUI != null) {
+            SwingUtilities.invokeLater(() -> {
+                clientUI.capturePiece(row, col);
+            });
+        }
+    }
 }

@@ -15,4 +15,6 @@ public interface SeegaClient extends Remote {
     void showGameOver(int winner) throws RemoteException;
 
     void promptForStartingPlayer() throws RemoteException;
+
+    void capturePiece(int row, int col) throws RemoteException;
 }

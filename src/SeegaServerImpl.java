@@ -124,7 +124,7 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
     @Override
     public synchronized boolean movePiece(int player, int fromRow, int fromCol, int toRow, int toCol)
             throws RemoteException {
-        if (player != currentPlayer || currentTurn <= Constants.PLACEMENT_PHASE_END_TURN) {
+        if (player != currentPlayer || currentTurn < Constants.MOVEMENT_PHASE_START_TURN) {
             return false;
         }
 
@@ -134,16 +134,43 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             return false;
         }
 
-        // Verifica se o movimento é válido (adjacente)
+        // Verifica movimento adjacente
         if (Math.abs(fromRow - toRow) + Math.abs(fromCol - toCol) != 1) {
             return false;
         }
 
+        // Executa o movimento
         board[fromRow][fromCol] = "";
         board[toRow][toCol] = playerSymbol;
-        currentPlayer = (currentPlayer == 1) ? 2 : 1;
-        currentTurn++;
 
+        // Verifica capturas
+        boolean captureOccurred = checkCaptures(player, toRow, toCol);
+
+        if (!captureOccurred) {
+            int nextPlayer = (currentPlayer == 1) ? 2 : 1;
+
+            // Verifica se o próximo jogador tem movimentos válidos
+            if (!hasValidMoves(nextPlayer)) {
+                broadcastMessage("Jogador " + nextPlayer + " não tem movimentos válidos! Turno passado.");
+
+                // Se nem o jogador atual tem movimentos, fim de jogo
+                if (!hasValidMoves(currentPlayer)) {
+                    broadcastMessage("Nenhum jogador tem movimentos válidos!");
+                    checkGameEnd();
+                    return true;
+                }
+
+                // Mantém o mesmo jogador para o próximo turno
+                currentTurn++;
+                notifyAllClients();
+                return true;
+            }
+
+            currentPlayer = nextPlayer;
+
+        }
+
+        currentTurn++;
         notifyAllClients();
         return true;
     }
@@ -203,4 +230,70 @@ public class SeegaServerImpl extends UnicastRemoteObject implements SeegaServer 
             client.showMessage(message);
         }
     }
+
+    private void checkGameEnd() throws RemoteException {
+        boolean player1HasPieces = false;
+        boolean player2HasPieces = false;
+
+        // Verifica peças restantes
+        for (int row = 0; row < Constants.BOARD_SIZE; row++) {
+            for (int col = 0; col < Constants.BOARD_SIZE; col++) {
+                if (board[row][col].equals(Constants.PLAYER_1_SYMBOL)) {
+                    player1HasPieces = true;
+                } else if (board[row][col].equals(Constants.PLAYER_2_SYMBOL)) {
+                    player2HasPieces = true;
+                }
+            }
+        }
+
+        // Determina o resultado
+        if (!player1HasPieces || !player2HasPieces) {
+            int winner = !player1HasPieces ? 2 : 1;
+            broadcastMessage("Jogador 2 venceu!");
+            for (SeegaClient client : clients) {
+                client.showGameOver(winner);
+            }
+        }
+    }
+
+    private boolean checkCaptures(int player, int movedToRow, int movedToCol) throws RemoteException {
+        String playerSymbol = (player == 1) ? Constants.PLAYER_1_SYMBOL : Constants.PLAYER_2_SYMBOL;
+        String opponentSymbol = (player == 1) ? Constants.PLAYER_2_SYMBOL : Constants.PLAYER_1_SYMBOL;
+        boolean captureOccurred = false;
+
+        int[][] directions = { { -1, 0 }, { 0, 1 }, { 1, 0 }, { 0, -1 } };
+
+        for (int[] dir : directions) {
+            int adjacentRow = movedToRow + dir[0];
+            int adjacentCol = movedToCol + dir[1];
+
+            if (adjacentRow >= 0 && adjacentRow < Constants.BOARD_SIZE &&
+                    adjacentCol >= 0 && adjacentCol < Constants.BOARD_SIZE) {
+
+                // Verifica se é uma peça adversária E NÃO está no centro
+                if (board[adjacentRow][adjacentCol].equals(opponentSymbol) &&
+                        !(adjacentRow == Constants.CENTER_ROW && adjacentCol == Constants.CENTER_COL)) {
+
+                    int oppositeRow = adjacentRow + dir[0];
+                    int oppositeCol = adjacentCol + dir[1];
+
+                    if (oppositeRow >= 0 && oppositeRow < Constants.BOARD_SIZE &&
+                            oppositeCol >= 0 && oppositeCol < Constants.BOARD_SIZE &&
+                            board[oppositeRow][oppositeCol].equals(playerSymbol)) {
+
+                        board[adjacentRow][adjacentCol] = "";
+                        for (SeegaClient client : clients) {
+                            client.capturePiece(adjacentRow, adjacentCol);
+                        }
+                        broadcastMessage("Jogador " + player + " capturou uma peça!");
+                        captureOccurred = true;
+                    }
+                }
+            }
+        }
+
+        checkGameEnd();
+        return captureOccurred;
+    }
+
 }

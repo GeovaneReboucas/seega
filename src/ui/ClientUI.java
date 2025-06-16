@@ -20,6 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
 import src.Client;
@@ -375,9 +376,18 @@ public class ClientUI {
     public void capturePiece(int row, int col) {
         SwingUtilities.invokeLater(() -> {
             boardButtons[row][col].setText("");
+            boardButtons[row][col].setBackground(Color.WHITE);
             boardButtons[row][col].setEnabled(true);
-            boardButtons[row][col].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+
+            // Efeito visual para a captura
+            boardButtons[row][col].setBackground(Color.YELLOW);
+            Timer timer = new Timer(600, e -> {
+                boardButtons[row][col].setBackground(Color.WHITE);
+            });
+            timer.setRepeats(false);
+            timer.start();
         });
+
     }
 
     public void gameOver() {
