@@ -17,10 +17,11 @@ public class Server {
         onlineUsers = new ConcurrentHashMap<>();
         registeredUsers = new ConcurrentHashMap<>();
         mqManager = new MessageQueueManager();
+        
         // Adicionar alguns usuários de exemplo para teste
-        registeredUsers.put("Alice", new User("Alice", new Location(-23.550520, -46.633308), false, 10.0));
-        registeredUsers.put("Bob", new User("Bob", new Location(-23.561356, -46.656030), false, 15.0));
-        registeredUsers.put("Charlie", new User("Charlie", new Location(-23.545580, -46.647560), false, 5.0));
+        // registeredUsers.put("Alice", new User("Alice", new Location(-23.550520, -46.633308), false, 10.0));
+        // registeredUsers.put("Bob", new User("Bob", new Location(-23.561356, -46.656030), false, 15.0));
+        // registeredUsers.put("Charlie", new User("Charlie", new Location(-23.545580, -46.647560), false, 5.0));
     }
 
     public void start() {
@@ -38,17 +39,17 @@ public class Server {
     }
 
     public synchronized void registerUser(User user, ClientHandler handler) {
-        // Se o usuário já está registrado, atualiza o handler para o novo socket
+        // Se o usuario já está registrado, atualiza o handler para o novo socket
         if (registeredUsers.containsKey(user.getName())) {
             User existingUser = registeredUsers.get(user.getName());
             existingUser.setOnline(true);
             onlineUsers.put(user.getName(), handler); // Atualiza o handler para o novo socket
-            System.out.println("Usuário " + user.getName() + " reconectado. Handler atualizado: " + handler);
+            System.out.println("Usuario " + user.getName() + " reconectado. Handler atualizado: " + handler);
         } else {
             onlineUsers.put(user.getName(), handler);
             registeredUsers.put(user.getName(), user);
             user.setOnline(true);
-            System.out.println("Novo usuário " + user.getName() + " online. Handler: " + handler);
+            System.out.println("Novo usuario " + user.getName() + " online. Handler: " + handler);
         }
         updateContactsForOnlineUsers();
         // Ao logar, verificar se há mensagens pendentes
@@ -61,7 +62,7 @@ public class Server {
         if (registeredUsers.containsKey(user.getName())) {
             registeredUsers.get(user.getName()).setOnline(false);
         }
-        System.out.println("Usuário " + user.getName() + " está offline (desconectado).");
+        System.out.println("Usuario " + user.getName() + " está offline (desconectado).");
         updateContactsForOnlineUsers();
     }
 
@@ -72,7 +73,7 @@ public class Server {
         User recipientUser = registeredUsers.get(recipientName);
 
         if (senderUser == null || recipientUser == null) {
-            System.out.println("Remetente ou destinatário não encontrado.");
+            System.out.println("Remetente ou destinatario nao encontrado.");
             return;
         }
 
@@ -95,12 +96,12 @@ public class Server {
             ClientHandler recipientHandler = onlineUsers.get(recipientName);
             if (recipientHandler != null) {
                 recipientHandler.sendSynchronousMessage(message);
-                System.out.println("Mensagem síncrona enviada: " + senderName + " -> " + recipientName);
+                System.out.println("Mensagem sincrona enviada: " + senderName + " -> " + recipientName);
             }
         } else {
             mqManager.sendAsyncMessage(message);
             System.out.println("Mensagem enfileirada. Motivo: " + 
-                            (recipientOnline ? "Fora do raio" : "Destinatário offline"));
+                            (recipientOnline ? "Fora do raio" : "Destinatario offline"));
         }
     }
 
@@ -108,7 +109,7 @@ public class Server {
         User user = registeredUsers.get(userName);
         if (user != null) {
             user.setLocation(newLocation);
-            System.out.println("Localização de " + userName + " atualizada para " + newLocation);
+            System.out.println("Localizacao de " + userName + " atualizada para " + newLocation);
             updateContactsForOnlineUsers();
         }
     }
@@ -122,7 +123,7 @@ public class Server {
             
             // Se estiver voltando online e não tiver handler, tentar encontrar um
             if (isOnline && !onlineUsers.containsKey(userName)) {
-                // Procura por qualquer handler existente para este usuário
+                // Procura por qualquer handler existente para este usuario
                 for (Map.Entry<String, ClientHandler> entry : onlineUsers.entrySet()) {
                     if (entry.getValue().getUserName().equals(userName)) {
                         onlineUsers.put(userName, entry.getValue());
@@ -136,10 +137,10 @@ public class Server {
             
             // Se estiver voltando online, verificar mensagens pendentes
             if (isOnline) {
-                // Verifica mensagens pendentes para este usuário
+                // Verifica mensagens pendentes para este usuario
                 sendPendingMessages(userName);
                 
-                // Verifica se este usuário tem mensagens pendentes para outros
+                // Verifica se este usuario tem mensagens pendentes para outros
                 for (User userRegister : registeredUsers.values()) {
                     if (userRegister.isOnline() && !userRegister.getName().equals(userName)) {
                         sendPendingMessages(userRegister.getName());
@@ -180,7 +181,7 @@ public class Server {
         User user = registeredUsers.get(userName);
         if (user != null) {
             user.setCommunicationRadius(newRadius);
-            System.out.println("Raio de comunicação de " + userName + " atualizado para " + newRadius + " km.");
+            System.out.println("Raio de comunicacao de " + userName + " atualizado para " + newRadius + " km.");
             updateContactsForOnlineUsers();
         }
     }

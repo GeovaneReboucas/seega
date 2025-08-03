@@ -36,12 +36,25 @@ public class ChatClientGUI extends JFrame {
     private JTextField currentMessageInput; // Campo de entrada de mensagem do chat atual
     private JButton currentSendButton; // Botão de envio do chat atual
     private String currentChatContact; // Contato com o qual o chat está aberto
+    private JLabel userHeaderLabel;
 
     public ChatClientGUI() {
         super("Location Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 600);
         setLayout(new BorderLayout());
+
+        // Cria o painel do header
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        headerPanel.setBackground(new Color(240, 240, 240)); // Cor de fundo cinza claro
+        
+        userHeaderLabel = new JLabel();
+        userHeaderLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        headerPanel.add(userHeaderLabel);
+        
+        add(headerPanel, BorderLayout.NORTH); // Adiciona o header no topo da janela
+
 
         chatHistories = new HashMap<>();
 
@@ -56,7 +69,7 @@ public class ChatClientGUI extends JFrame {
 
     private void createLoginPanel() {
         loginPanel = new JPanel(new GridBagLayout());
-        loginPanel.setBorder(BorderFactory.createTitledBorder("Configuração Inicial do Usuário"));
+        loginPanel.setBorder(BorderFactory.createTitledBorder("Configuracao Inicial do Usuario"));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -64,9 +77,9 @@ public class ChatClientGUI extends JFrame {
 
         // Nome do usuário
         gbc.gridx = 0; gbc.gridy = 0;
-        loginPanel.add(new JLabel("Nome do Usuário:"), gbc);
+        loginPanel.add(new JLabel("Nome do Usuario:"), gbc);
         gbc.gridx = 1;
-        usernameField = new JTextField("Alice", 15);
+        usernameField = new JTextField("", 15);
         loginPanel.add(usernameField, gbc);
 
         // Latitude
@@ -124,7 +137,7 @@ public class ChatClientGUI extends JFrame {
         
         // Aba de Configurações
         createSettingsPanel();
-        tabbedPane.addTab("Configurações", settingsPanel);
+        tabbedPane.addTab("Configuracoes", settingsPanel);
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
     }
@@ -141,7 +154,7 @@ public class ChatClientGUI extends JFrame {
         nearbyContactsListModel = new DefaultListModel<>();
         nearbyContactsList = new JList<>(nearbyContactsListModel);
         nearbyContactsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        nearbyContactsList.setBorder(BorderFactory.createTitledBorder("Contatos Próximos"));
+        nearbyContactsList.setBorder(BorderFactory.createTitledBorder("Contatos Proximos"));
         nearbyContactsList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -161,7 +174,7 @@ public class ChatClientGUI extends JFrame {
         chatHistoryContactsListModel = new DefaultListModel<>();
         chatHistoryContactsList = new JList<>(chatHistoryContactsListModel);
         chatHistoryContactsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        chatHistoryContactsList.setBorder(BorderFactory.createTitledBorder("Histórico de Mensagens"));
+        chatHistoryContactsList.setBorder(BorderFactory.createTitledBorder("Historico de Mensagens"));
         chatHistoryContactsList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -187,7 +200,7 @@ public class ChatClientGUI extends JFrame {
 
     private void createSettingsPanel() {
         settingsPanel = new JPanel(new GridBagLayout());
-        settingsPanel.setBorder(BorderFactory.createTitledBorder("Configurações do Usuário"));
+        settingsPanel.setBorder(BorderFactory.createTitledBorder("Configuracoes do Usuario"));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -195,7 +208,7 @@ public class ChatClientGUI extends JFrame {
 
         // Nome do usuário (somente leitura)
         gbc.gridx = 0; gbc.gridy = 0;
-        settingsPanel.add(new JLabel("Nome do Usuário:"), gbc);
+        settingsPanel.add(new JLabel("Nome do Usuario:"), gbc);
         gbc.gridx = 1;
         JTextField usernameDisplayField = new JTextField(15);
         usernameDisplayField.setEditable(false);
@@ -225,7 +238,7 @@ public class ChatClientGUI extends JFrame {
 
         // Raio de comunicação (editável)
         gbc.gridx = 0; gbc.gridy = 4;
-        settingsPanel.add(new JLabel("Raio de Comunicação (km):"), gbc);
+        settingsPanel.add(new JLabel("Raio de Comunicacao (km):"), gbc);
         gbc.gridx = 1;
         JTextField radiusUpdateField = new JTextField(15);
         settingsPanel.add(radiusUpdateField, gbc);
@@ -235,7 +248,7 @@ public class ChatClientGUI extends JFrame {
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        JButton updateInfoButton = new JButton("Atualizar Informações");
+        JButton updateInfoButton = new JButton("Atualizar Informacoes");
         updateInfoButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -289,7 +302,7 @@ public class ChatClientGUI extends JFrame {
             Double.parseDouble(lon);
             Double.parseDouble(radius);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Valores numéricos inválidos para latitude, longitude ou raio.");
+            JOptionPane.showMessageDialog(this, "Valores numericos invalidos para latitude, longitude ou raio.");
             return;
         }
 
@@ -301,9 +314,17 @@ public class ChatClientGUI extends JFrame {
         writer.println("LOGIN|" + username + "|" + lat + "|" + lon + "|" + radius);
     }
 
+    private void updateUserHeader() {
+        if (loggedInUser != null) {
+            userHeaderLabel.setText("Usuario: " + loggedInUser);
+            userHeaderLabel.setIcon(new ImageIcon("user_icon.png")); // Opcional: adicione um ícone
+        }
+    }
+
     private void switchToMainInterface() {
         remove(loginPanel);
         add(mainPanel, BorderLayout.CENTER);
+        updateUserHeader();
         
         // Atualizar os campos de configuração com os valores iniciais
         JTextField usernameDisplayField = (JTextField) settingsPanel.getClientProperty("usernameField");
@@ -327,7 +348,7 @@ public class ChatClientGUI extends JFrame {
         if (!isLoggedIn) return;
         
         if (recipient.isEmpty() || content.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Preencha destinatário e conteúdo da mensagem.");
+            JOptionPane.showMessageDialog(this, "Preencha destinatario e conteudo da mensagem.");
             return;
         }
 
@@ -335,11 +356,11 @@ public class ChatClientGUI extends JFrame {
         writer.println("SEND_MESSAGE|" + content + "|" + recipient + "|" + messageType);
         
         // Adiciona a mensagem ao histórico do chat
-        appendMessageToChatHistory(recipient, "Você: " + content + "\n");
+        appendMessageToChatHistory(recipient, "Voce: " + content + "\n");
         
         // Atualiza a área de chat se for o contato atual
         if (currentChatArea != null && recipient.equals(currentChatContact)) {
-            currentChatArea.append("Você: " + content + "\n");
+            currentChatArea.append("Voce: " + content + "\n");
         }
     }
 
@@ -352,7 +373,7 @@ public class ChatClientGUI extends JFrame {
             Double.parseDouble(lon);
             writer.println("UPDATE_LOCATION|" + lat + "|" + lon);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Valores inválidos para latitude ou longitude.");
+            JOptionPane.showMessageDialog(this, "Valores invalidos para latitude ou longitude.");
         }
 
         // Atualizar Status - Esta é a parte crítica
@@ -368,9 +389,9 @@ public class ChatClientGUI extends JFrame {
             Double.parseDouble(radius);
             writer.println("UPDATE_RADIUS|" + radius);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Valor inválido para o raio de comunicação.");
+            JOptionPane.showMessageDialog(this, "Valor invalido para o raio de comunicação.");
         }
-        JOptionPane.showMessageDialog(this, "Informações atualizadas com sucesso!");
+        JOptionPane.showMessageDialog(this, "Informacoes atualizadas com sucesso!");
     }
 
     private void listenForServerMessages() {
