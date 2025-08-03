@@ -126,9 +126,17 @@ public class Server {
         if (user != null) {
             user.setLocation(newLocation);
             System.out.println("Localizacao de " + userName + " atualizada para " + newLocation);
+            
+            // Verifica mensagens pendentes para este usuário
+            sendPendingMessages(userName);
+            
+            // Verifica mensagens de outros usuários que podem agora ver este usuário
+            checkAndDeliverPendingMessages();
+            
             updateContactsForOnlineUsers();
         }
     }
+
 
     public synchronized void updateStatus(String userName, boolean isOnline) {
         User user = registeredUsers.get(userName);
@@ -141,20 +149,8 @@ public class Server {
                 // Verifica mensagens pendentes para este usuário
                 sendPendingMessages(userName);
                 
-                // Notifica todos os usuários que podem ver este usuário
-                for (User otherUser : registeredUsers.values()) {
-                    if (otherUser.isOnline() && !otherUser.getName().equals(userName)) {
-                        boolean withinOtherUserRadius = DistanceCalculator.isWithinRadius(
-                            otherUser.getLocation(),
-                            user.getLocation(),
-                            otherUser.getCommunicationRadius()
-                        );
-                        
-                        if (withinOtherUserRadius) {
-                            sendPendingMessages(otherUser.getName());
-                        }
-                    }
-                }
+                // Verifica mensagens de outros usuários que podem ver este usuário
+                checkAndDeliverPendingMessages();
             }
             
             updateContactsForOnlineUsers();
@@ -169,8 +165,6 @@ public class Server {
         ClientHandler handler = onlineUsers.get(userName);
         
         if (handler != null) {
-            List<String> messagesToKeep = new ArrayList<>();
-            
             for (String msg : pendingMessages) {
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 4) {
@@ -180,41 +174,15 @@ public class Server {
                     String type = parts[3];
                     
                     User senderUser = registeredUsers.get(sender);
-                    if (senderUser != null && senderUser.isOnline()) {
-                        // Verifica raio mútuo
-                        boolean mutualRadius = DistanceCalculator.isWithinRadius(
-                            user.getLocation(),
-                            senderUser.getLocation(),
-                            user.getCommunicationRadius()
-                        ) && DistanceCalculator.isWithinRadius(
-                            senderUser.getLocation(),
-                            user.getLocation(),
-                            senderUser.getCommunicationRadius()
-                        );
-
-                        if (mutualRadius) {
-                            Message message = new Message(content, sender, userName, Message.MessageType.valueOf(type));
-                            message.setTimestamp(LocalDateTime.parse(timestamp));
-                            handler.sendSynchronousMessage(message);
-                            System.out.println("Mensagem pendente entregue (síncrona): " + sender + " -> " + userName);
-                        } else {
-                            // Mantém na fila se não houver raio mútuo
-                            messagesToKeep.add(msg);
-                            System.out.println("Mensagem mantida na fila (sem raio mútuo): " + sender + " -> " + userName);
-                        }
+                    if (senderUser != null && isMutuallyVisible(user, senderUser)) {
+                        Message message = new Message(content, sender, userName, Message.MessageType.valueOf(type));
+                        message.setTimestamp(LocalDateTime.parse(timestamp));
+                        handler.sendSynchronousMessage(message);
+                        System.out.println("Mensagem pendente entregue (síncrona): " + sender + " -> " + userName);
                     } else {
-                        // Mantém na fila se remetente offline
-                        messagesToKeep.add(msg);
+                        // Mantém na fila se não houver visibilidade mútua
+                        mqManager.sendAsyncMessage(new Message(content, sender, userName, Message.MessageType.ASYNCHRONOUS));
                     }
-                }
-            }
-            
-            // Reenvia as mensagens que precisam ser mantidas
-            if (!messagesToKeep.isEmpty()) {
-                try {
-                    mqManager.sendAsyncMessages(userName, messagesToKeep);
-                } catch (JMSException e) {
-                    System.err.println("Erro ao sincronizar mensagens assíncronas: " + e.getMessage());
                 }
             }
         }
@@ -225,15 +193,24 @@ public class Server {
         if (user != null) {
             user.setCommunicationRadius(newRadius);
             System.out.println("Raio de comunicacao de " + userName + " atualizado para " + newRadius + " km.");
+            
+            // Verifica mensagens pendentes para este usuário
+            sendPendingMessages(userName);
+            
+            // Verifica mensagens de outros usuários que podem agora ver este usuário
+            checkAndDeliverPendingMessages();
+            
             updateContactsForOnlineUsers();
         }
     }
 
-    private void updateContactsForOnlineUsers() {
+
+    public synchronized void updateContactsForOnlineUsers() {
         for (ClientHandler handler : onlineUsers.values()) {
             User currentUser = registeredUsers.get(handler.getUserName());
             if (currentUser != null) {
                 List<User> visibleContacts = new ArrayList<>();
+                
                 for (User otherUser : registeredUsers.values()) {
                     if (!currentUser.equals(otherUser)) {
                         // Verifica se está dentro do raio do usuário atual
@@ -243,17 +220,10 @@ public class Server {
                             currentUser.getCommunicationRadius()
                         );
                         
-                        // Verifica se o outro usuário também está dentro do SEU raio
-                        boolean withinOtherUserRadius = DistanceCalculator.isWithinRadius(
-                            otherUser.getLocation(),
-                            currentUser.getLocation(),
-                            otherUser.getCommunicationRadius()
-                        );
-                        
-                        // Cria uma cópia do usuário com status ajustado
+                        // Cria cópia do usuário com status ajustado
                         User contactCopy = new User(otherUser.getName(), 
                                                 otherUser.getLocation(),
-                                                otherUser.isOnline() && withinOtherUserRadius,
+                                                isMutuallyVisible(currentUser, otherUser),
                                                 otherUser.getCommunicationRadius());
                         
                         if (withinCurrentUserRadius) {
@@ -264,6 +234,30 @@ public class Server {
                 currentUser.getContacts().clear();
                 currentUser.getContacts().addAll(visibleContacts);
                 handler.sendContactList(currentUser.getContacts());
+            }
+        }
+    }
+
+    private boolean isMutuallyVisible(User user1, User user2) {
+        boolean user1CanSeeUser2 = DistanceCalculator.isWithinRadius(
+            user1.getLocation(),
+            user2.getLocation(),
+            user1.getCommunicationRadius()
+        );
+        
+        boolean user2CanSeeUser1 = DistanceCalculator.isWithinRadius(
+            user2.getLocation(),
+            user1.getLocation(),
+            user2.getCommunicationRadius()
+        );
+        
+        return user1.isOnline() && user2.isOnline() && user1CanSeeUser2 && user2CanSeeUser1;
+    }
+
+    public void checkAndDeliverPendingMessages() {
+        for (User user : registeredUsers.values()) {
+            if (user.isOnline()) {
+                sendPendingMessages(user.getName());
             }
         }
     }
