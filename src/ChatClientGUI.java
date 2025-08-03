@@ -259,6 +259,10 @@ public class ChatClientGUI extends JFrame {
 
     private void connectToServer() {
         try {
+            // Se o socket já existe e está conectado, fecha-o antes de criar um novo
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
             socket = new Socket("localhost", 5555);
             writer = new PrintWriter(socket.getOutputStream(), true);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -351,8 +355,13 @@ public class ChatClientGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Valores inválidos para latitude ou longitude.");
         }
 
-        // Atualizar Status
+        // Atualizar Status - Esta é a parte crítica
         writer.println("UPDATE_STATUS|" + isOnline);
+        
+        // Se estiver voltando para online, forçar o servidor a verificar mensagens pendentes
+        if (isOnline) {
+            writer.println("CHECK_PENDING|" + loggedInUser);
+        }
 
         // Atualizar Raio
         try {

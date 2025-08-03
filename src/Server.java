@@ -36,11 +36,19 @@ public class Server {
         }
     }
 
-    public void registerUser(User user, ClientHandler handler) {
-        onlineUsers.put(user.getName(), handler);
-        registeredUsers.put(user.getName(), user);
-        user.setOnline(true);
-        System.out.println("Usuário " + user.getName() + " está online. Handler: " + handler);
+    public synchronized void registerUser(User user, ClientHandler handler) {
+        // Se o usuário já está registrado, atualiza o handler para o novo socket
+        if (registeredUsers.containsKey(user.getName())) {
+            User existingUser = registeredUsers.get(user.getName());
+            existingUser.setOnline(true);
+            onlineUsers.put(user.getName(), handler); // Atualiza o handler para o novo socket
+            System.out.println("Usuário " + user.getName() + " reconectado. Handler atualizado: " + handler);
+        } else {
+            onlineUsers.put(user.getName(), handler);
+            registeredUsers.put(user.getName(), user);
+            user.setOnline(true);
+            System.out.println("Novo usuário " + user.getName() + " online. Handler: " + handler);
+        }
         updateContactsForOnlineUsers();
         // Ao logar, verificar se há mensagens pendentes
         sendPendingMessages(user.getName());
@@ -96,53 +104,46 @@ public class Server {
         }
     }
 
-    public void updateStatus(String userName, boolean isOnline) {
+    public synchronized void updateStatus(String userName, boolean isOnline) {
         User user = registeredUsers.get(userName);
         
-        System.out.println("DEBUG: updateStatus chamado para " + userName + " com isOnline = " + isOnline);
-
         if (user != null) {
             user.setOnline(isOnline);
-            System.out.println("Status de " + userName + " atualizado para " + (isOnline ? "Online" : "Offline") + ". (Interno: " + user.isOnline() + ")");
+            System.out.println("Status de " + userName + " atualizado para " + (isOnline ? "Online" : "Offline"));
             
-            if (isOnline) {
-                // Se o usuário está ficando online, adiciona ou atualiza o handler no mapa onlineUsers
-                // Isso é crucial para que o servidor saiba que o usuário está ativo e pode receber mensagens síncronas
-                // e para que as mensagens pendentes sejam enviadas.
-                // O handler é passado no registerUser, mas se o status for atualizado via UI, precisamos garantir que o handler esteja lá.
-                // No entanto, o handler só existe se o socket estiver conectado. Se o usuário estava offline e o socket foi fechado,
-                // ele precisaria se reconectar para ter um handler válido.
-                // Por enquanto, vamos assumir que o handler ainda está ativo se o usuário está atualizando o status via UI.
-                // Se o handler for null aqui, significa que o cliente se desconectou e tentou atualizar o status sem reconectar.
-                ClientHandler handler = onlineUsers.get(userName);
-                if (handler != null) {
-                    sendPendingMessages(userName);
-                    System.out.println("DEBUG: Mensagens pendentes enviadas para " + userName);
-                } else {
-                    System.out.println("DEBUG: Handler para " + userName + " é NULL. Não é possível enviar mensagens pendentes.");
+            // Se estiver voltando online e não tiver handler, tentar encontrar um
+            if (isOnline && !onlineUsers.containsKey(userName)) {
+                // Procura por qualquer handler existente para este usuário
+                for (Map.Entry<String, ClientHandler> entry : onlineUsers.entrySet()) {
+                    if (entry.getValue().getUserName().equals(userName)) {
+                        onlineUsers.put(userName, entry.getValue());
+                        break;
+                    }
                 }
-            } else {
-                // Se o usuário está ficando offline, remove o handler do mapa onlineUsers
-                onlineUsers.remove(userName);
-                System.out.println("DEBUG: Handler para " + userName + " removido de onlineUsers.");
             }
             
-            // Sempre atualizar a lista de contatos para refletir o novo status
+            // Atualizar lista de contatos
             updateContactsForOnlineUsers();
+            
+            // Se estiver voltando online, verificar mensagens pendentes
+            if (isOnline) {
+                sendPendingMessages(userName);
+            }
         }
     }
 
-    private void sendPendingMessages(String userName) {
+    public void sendPendingMessages(String userName) {
         List<String> pendingMessages = mqManager.receiveAsyncMessages(userName);
         ClientHandler handler = onlineUsers.get(userName);
         if (handler != null) {
             System.out.println("DEBUG: Tentando enviar " + pendingMessages.size() + " mensagens pendentes para " + userName);
             for (String msg : pendingMessages) {
-                // Formato da mensagem: sender|content|timestamp
+                // Formato da mensagem: sender|content|timestamp|type
                 String[] msgParts = msg.split("\\|");
                 if (msgParts.length >= 3) {
                     String sender = msgParts[0];
                     String content = msgParts[1];
+                    String timestamp = msgParts[2];
                     // Reconstruir a mensagem para enviar ao cliente
                     Message asyncMessage = new Message(content, sender, userName, Message.MessageType.ASYNCHRONOUS);
                     handler.sendSynchronousMessage(asyncMessage); // Reutilizando o método de envio síncrono para entregar a mensagem
@@ -190,4 +191,3 @@ public class Server {
         server.start();
     }
 }
-

@@ -52,6 +52,9 @@ public class ClientHandler implements Runnable {
                     server.registerUser(user, this);
                     writer.println("LOGIN_SUCCESS|" + name);
                     System.out.println("DEBUG: Login processado para " + name);
+                    
+                    // Forçar atualização de status para online
+                    server.updateStatus(name, true);
                 }
                 break;
                 
@@ -84,9 +87,21 @@ public class ClientHandler implements Runnable {
                     boolean isOnline = Boolean.parseBoolean(parts[1]);
                     System.out.println("DEBUG: UPDATE_STATUS recebido para " + userName + " com valor: " + parts[1] + " (parsed: " + isOnline + ")");
                     server.updateStatus(userName, isOnline);
+                    
+                    // Se estiver voltando online, verificar mensagens pendentes imediatamente
+                    if (isOnline) {
+                        server.sendPendingMessages(userName);
+                    }
                 }
                 break;
-                
+
+            case "CHECK_PENDING":
+                if (parts.length >= 2) {
+                    String userToCheck = parts[1];
+                    server.sendPendingMessages(userToCheck);
+                }
+                break;
+
             case "UPDATE_RADIUS":
                 if (parts.length >= 2) {
                     double newRadius = Double.parseDouble(parts[1]);
@@ -131,10 +146,15 @@ public class ClientHandler implements Runnable {
         try {
             if (reader != null) reader.close();
             if (writer != null) writer.close();
-            if (clientSocket != null) clientSocket.close();
+            if (clientSocket != null && !clientSocket.isClosed()) clientSocket.close(); // Verifica se o socket não está fechado antes de tentar fechar
         } catch (IOException e) {
             System.err.println("Erro ao fechar conexão: " + e.getMessage());
         }
     }
+
+    public PrintWriter getWriter() {
+        return writer;
+    }
+
 }
 
