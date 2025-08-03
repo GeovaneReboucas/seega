@@ -41,12 +41,13 @@ public class ClientHandler implements Runnable {
 
         switch (action) {
             case "LOGIN":
-                if (parts.length >= 5) {
+                if (parts.length >= 4) { // Agora são 4 partes (sem o status)
                     String name = parts[1];
                     double lat = Double.parseDouble(parts[2]);
                     double lon = Double.parseDouble(parts[3]);
                     double radius = Double.parseDouble(parts[4]);
                     
+                    // Sempre cria como online
                     User user = new User(name, new Location(lat, lon), true, radius);
                     this.userName = name;
                     server.registerUser(user, this);

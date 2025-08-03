@@ -44,24 +44,25 @@ public class ChatClientGUI extends JFrame {
         setSize(800, 600);
         setLayout(new BorderLayout());
 
-        // Cria o painel do header
+        // Cria o painel do header primeiro
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        headerPanel.setBackground(new Color(240, 240, 240)); // Cor de fundo cinza claro
+        headerPanel.setBackground(new Color(240, 240, 240));
         
         userHeaderLabel = new JLabel();
         userHeaderLabel.setFont(new Font("Arial", Font.BOLD, 14));
         headerPanel.add(userHeaderLabel);
         
-        add(headerPanel, BorderLayout.NORTH); // Adiciona o header no topo da janela
+        add(headerPanel, BorderLayout.NORTH);
 
-
+        // Inicializa os históricos de chat
         chatHistories = new HashMap<>();
 
+        // Cria todos os painéis necessários
         createLoginPanel();
-        createMainPanel();
-
-        // Inicialmente mostra apenas a tela de login
+        createMainPanel(); // Isso criará o settingsPanel também
+        
+        // Mostra inicialmente a tela de login
         add(loginPanel, BorderLayout.CENTER);
         
         setVisible(true);
@@ -69,7 +70,7 @@ public class ChatClientGUI extends JFrame {
 
     private void createLoginPanel() {
         loginPanel = new JPanel(new GridBagLayout());
-        loginPanel.setBorder(BorderFactory.createTitledBorder("Configuracao Inicial do Usuario"));
+        loginPanel.setBorder(BorderFactory.createTitledBorder("Configuração Inicial do Usuário"));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
@@ -77,7 +78,7 @@ public class ChatClientGUI extends JFrame {
 
         // Nome do usuário
         gbc.gridx = 0; gbc.gridy = 0;
-        loginPanel.add(new JLabel("Nome do Usuario:"), gbc);
+        loginPanel.add(new JLabel("Nome do Usuário:"), gbc);
         gbc.gridx = 1;
         usernameField = new JTextField("", 15);
         loginPanel.add(usernameField, gbc);
@@ -96,23 +97,15 @@ public class ChatClientGUI extends JFrame {
         longitudeField = new JTextField("-46.633308", 15);
         loginPanel.add(longitudeField, gbc);
 
-        // Status Online/Offline
+        // Raio de comunicação (agora editável)
         gbc.gridx = 0; gbc.gridy = 3;
-        loginPanel.add(new JLabel("Status:"), gbc);
-        gbc.gridx = 1;
-        onlineStatusCheckbox = new JCheckBox("Online", true);
-        loginPanel.add(onlineStatusCheckbox, gbc);
-
-        // Raio de comunicação (valor padrão)
-        gbc.gridx = 0; gbc.gridy = 4;
         loginPanel.add(new JLabel("Raio de Comunicação (km):"), gbc);
         gbc.gridx = 1;
         radiusField = new JTextField("10.0", 15);
-        radiusField.setEditable(false); // Raio padrão, não editável na tela de login
         loginPanel.add(radiusField, gbc);
 
         // Botão de login
-        gbc.gridx = 0; gbc.gridy = 5;
+        gbc.gridx = 0; gbc.gridy = 4;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         loginButton = new JButton("Entrar no Sistema");
@@ -135,9 +128,10 @@ public class ChatClientGUI extends JFrame {
         JPanel chatPanel = createChatPanel();
         tabbedPane.addTab("Chat", chatPanel);
         
-        // Aba de Configurações
+        // Aba de Configurações (garante que settingsPanel é criado)
+        settingsPanel = new JPanel(new GridBagLayout());
         createSettingsPanel();
-        tabbedPane.addTab("Configuracoes", settingsPanel);
+        tabbedPane.addTab("Configurações", settingsPanel);
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
     }
@@ -233,7 +227,7 @@ public class ChatClientGUI extends JFrame {
         gbc.gridx = 0; gbc.gridy = 3;
         settingsPanel.add(new JLabel("Status:"), gbc);
         gbc.gridx = 1;
-        JCheckBox statusUpdateCheckbox = new JCheckBox("Online");
+        JCheckBox statusUpdateCheckbox = new JCheckBox("Online", true); // Inicia marcado
         settingsPanel.add(statusUpdateCheckbox, gbc);
 
         // Raio de comunicação (editável)
@@ -290,7 +284,7 @@ public class ChatClientGUI extends JFrame {
         String username = usernameField.getText().trim();
         String lat = latitudeField.getText().trim();
         String lon = longitudeField.getText().trim();
-        String radius = radiusField.getText().trim(); // Pega o valor do campo, mesmo que seja padrão
+        String radius = radiusField.getText().trim();
 
         if (username.isEmpty() || lat.isEmpty() || lon.isEmpty() || radius.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Preencha todos os campos de login.");
@@ -302,7 +296,7 @@ public class ChatClientGUI extends JFrame {
             Double.parseDouble(lon);
             Double.parseDouble(radius);
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Valores numericos invalidos para latitude, longitude ou raio.");
+            JOptionPane.showMessageDialog(this, "Valores numéricos inválidos para latitude, longitude ou raio.");
             return;
         }
 
@@ -311,6 +305,7 @@ public class ChatClientGUI extends JFrame {
         }
 
         loggedInUser = username;
+        // Envia true como status online fixo
         writer.println("LOGIN|" + username + "|" + lat + "|" + lon + "|" + radius);
     }
 
@@ -323,21 +318,29 @@ public class ChatClientGUI extends JFrame {
 
     private void switchToMainInterface() {
         remove(loginPanel);
+        
+        // Garante que os painéis principais estão criados
+        if (mainPanel == null) {
+            createMainPanel();
+        }
+        
         add(mainPanel, BorderLayout.CENTER);
         updateUserHeader();
         
-        // Atualizar os campos de configuração com os valores iniciais
-        JTextField usernameDisplayField = (JTextField) settingsPanel.getClientProperty("usernameField");
-        JTextField latitudeUpdateField = (JTextField) settingsPanel.getClientProperty("latitudeField");
-        JTextField longitudeUpdateField = (JTextField) settingsPanel.getClientProperty("longitudeField");
-        JCheckBox statusUpdateCheckbox = (JCheckBox) settingsPanel.getClientProperty("statusCheckbox");
-        JTextField radiusUpdateField = (JTextField) settingsPanel.getClientProperty("radiusField");
-        
-        usernameDisplayField.setText(loggedInUser);
-        latitudeUpdateField.setText(latitudeField.getText());
-        longitudeUpdateField.setText(longitudeField.getText());
-        statusUpdateCheckbox.setSelected(onlineStatusCheckbox.isSelected());
-        radiusUpdateField.setText(radiusField.getText());
+        // Só tenta acessar os campos se settingsPanel foi criado
+        if (settingsPanel != null) {
+            JTextField usernameDisplayField = (JTextField) settingsPanel.getClientProperty("usernameField");
+            JTextField latitudeUpdateField = (JTextField) settingsPanel.getClientProperty("latitudeField");
+            JTextField longitudeUpdateField = (JTextField) settingsPanel.getClientProperty("longitudeField");
+            JCheckBox statusUpdateCheckbox = (JCheckBox) settingsPanel.getClientProperty("statusCheckbox");
+            JTextField radiusUpdateField = (JTextField) settingsPanel.getClientProperty("radiusField");
+            
+            if (usernameDisplayField != null) usernameDisplayField.setText(loggedInUser);
+            if (latitudeUpdateField != null) latitudeUpdateField.setText(latitudeField.getText());
+            if (longitudeUpdateField != null) longitudeUpdateField.setText(longitudeField.getText());
+            if (statusUpdateCheckbox != null) statusUpdateCheckbox.setSelected(true); // Sempre online
+            if (radiusUpdateField != null) radiusUpdateField.setText(radiusField.getText());
+        }
         
         isLoggedIn = true;
         revalidate();
