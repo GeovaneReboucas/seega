@@ -17,13 +17,14 @@ public class MessageQueueManager {
         String queueName = "user." + message.getRecipient();
         try {
             MessageProducer producer = getOrCreateProducer(queueName);
-            // Incluir todas as informações necessárias na mensagem
-            String messageText = message.getSender() + "|" + message.getContent() + "|" + 
-                            message.getTimestamp() + "|" + message.getType();
+            String messageText = message.getSender() + "|" + 
+                            message.getContent() + "|" + 
+                            message.getTimestamp().toString() + "|" + 
+                            message.getType();
             producer.send(messageText);
-            System.out.println("Mensagem assíncrona persistida para " + message.getRecipient());
+            System.out.println("Mensagem persistida na fila: " + messageText);
         } catch (JMSException e) {
-            System.err.println("Erro ao enviar mensagem assíncrona: " + e.getMessage());
+            System.err.println("Erro ao enfileirar mensagem: " + e.getMessage());
         }
     }
 

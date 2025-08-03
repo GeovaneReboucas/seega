@@ -85,11 +85,11 @@ public class ClientHandler implements Runnable {
             case "UPDATE_STATUS":
                 if (parts.length >= 2) {
                     boolean isOnline = Boolean.parseBoolean(parts[1]);
-                    System.out.println("DEBUG: UPDATE_STATUS recebido para " + userName + " com valor: " + parts[1] + " (parsed: " + isOnline + ")");
+                    System.out.println("Status atualizado para " + userName + ": " + (isOnline ? "ONLINE" : "OFFLINE"));
                     server.updateStatus(userName, isOnline);
                     
-                    // Se estiver voltando online, verificar mensagens pendentes imediatamente
                     if (isOnline) {
+                        System.out.println("Verificando mensagens pendentes para " + userName);
                         server.sendPendingMessages(userName);
                     }
                 }
@@ -116,7 +116,12 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendSynchronousMessage(Message message) {
-        writer.println("MESSAGE|" + message.getSender() + "|" + message.getContent() + "|" + message.getTimestamp());
+        // Inclui o tipo da mensagem no envio
+        writer.println("MESSAGE|" + 
+                    message.getSender() + "|" + 
+                    message.getContent() + "|" + 
+                    message.getTimestamp() + "|" + 
+                    message.getType());
     }
 
     public void sendContactList(List<User> contacts) {

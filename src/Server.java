@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
@@ -65,9 +66,9 @@ public class Server {
     }
 
     public void sendMessage(Message message) {
+        String senderName = message.getSender();
         String recipientName = message.getRecipient();
-        ClientHandler recipientHandler = onlineUsers.get(recipientName);
-        User senderUser = registeredUsers.get(message.getSender());
+        User senderUser = registeredUsers.get(senderName);
         User recipientUser = registeredUsers.get(recipientName);
 
         if (senderUser == null || recipientUser == null) {
@@ -75,23 +76,31 @@ public class Server {
             return;
         }
 
-        if (message.getType() == Message.MessageType.SYNCHRONOUS) {
-            if (recipientHandler != null && recipientUser.isOnline()) {
-                // Verificar raio de comunicação
-                if (DistanceCalculator.isWithinRadius(senderUser.getLocation(), recipientUser.getLocation(), senderUser.getCommunicationRadius())) {
-                    recipientHandler.sendSynchronousMessage(message);
-                    System.out.println("Mensagem síncrona enviada de " + message.getSender() + " para " + message.getRecipient());
-                } else {
-                    System.out.println("Usuário " + recipientName + " fora do raio de comunicação de " + senderUser.getName() + ". Enviando como assíncrona.");
-                    mqManager.sendAsyncMessage(message);
-                }
-            } else {
-                System.out.println("Usuário " + recipientName + " offline ou não encontrado para mensagem síncrona. Enviando como assíncrona.");
-                mqManager.sendAsyncMessage(message);
-            }
-        } else if (message.getType() == Message.MessageType.ASYNCHRONOUS) {
+        // Sempre envia para a fila se o remetente estiver offline
+        if (!senderUser.isOnline()) {
             mqManager.sendAsyncMessage(message);
-            System.out.println("Mensagem assíncrona de " + message.getSender() + " para " + message.getRecipient() + " enviada para a fila.");
+            System.out.println("Remetente offline. Mensagem enfileirada: " + senderName + " -> " + recipientName);
+            return;
+        }
+
+        // Se chegou aqui, o remetente está online
+        boolean recipientOnline = recipientUser.isOnline();
+        boolean withinRadius = DistanceCalculator.isWithinRadius(
+            senderUser.getLocation(), 
+            recipientUser.getLocation(), 
+            senderUser.getCommunicationRadius()
+        );
+
+        if (recipientOnline && withinRadius) {
+            ClientHandler recipientHandler = onlineUsers.get(recipientName);
+            if (recipientHandler != null) {
+                recipientHandler.sendSynchronousMessage(message);
+                System.out.println("Mensagem síncrona enviada: " + senderName + " -> " + recipientName);
+            }
+        } else {
+            mqManager.sendAsyncMessage(message);
+            System.out.println("Mensagem enfileirada. Motivo: " + 
+                            (recipientOnline ? "Fora do raio" : "Destinatário offline"));
         }
     }
 
@@ -127,27 +136,41 @@ public class Server {
             
             // Se estiver voltando online, verificar mensagens pendentes
             if (isOnline) {
+                // Verifica mensagens pendentes para este usuário
                 sendPendingMessages(userName);
+                
+                // Verifica se este usuário tem mensagens pendentes para outros
+                for (User userRegister : registeredUsers.values()) {
+                    if (userRegister.isOnline() && !userRegister.getName().equals(userName)) {
+                        sendPendingMessages(userRegister.getName());
+                    }
+                }
+
             }
         }
     }
 
     public void sendPendingMessages(String userName) {
+        User user = registeredUsers.get(userName);
+        if (user == null || !user.isOnline()) return;
+
         List<String> pendingMessages = mqManager.receiveAsyncMessages(userName);
         ClientHandler handler = onlineUsers.get(userName);
+        
         if (handler != null) {
-            System.out.println("DEBUG: Tentando enviar " + pendingMessages.size() + " mensagens pendentes para " + userName);
             for (String msg : pendingMessages) {
-                // Formato da mensagem: sender|content|timestamp|type
-                String[] msgParts = msg.split("\\|");
-                if (msgParts.length >= 3) {
-                    String sender = msgParts[0];
-                    String content = msgParts[1];
-                    String timestamp = msgParts[2];
-                    // Reconstruir a mensagem para enviar ao cliente
-                    Message asyncMessage = new Message(content, sender, userName, Message.MessageType.ASYNCHRONOUS);
-                    handler.sendSynchronousMessage(asyncMessage); // Reutilizando o método de envio síncrono para entregar a mensagem
-                    System.out.println("DEBUG: Mensagem pendente enviada: de " + sender + " para " + userName + ": " + content);
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 4) {
+                    String sender = parts[0];
+                    String content = parts[1];
+                    String timestamp = parts[2];
+                    String type = parts[3];
+                    
+                    // Cria e envia a mensagem independente do status do remetente
+                    Message message = new Message(content, sender, userName, Message.MessageType.valueOf(type));
+                    message.setTimestamp(LocalDateTime.parse(timestamp)); // Você precisará adicionar este método na classe Message
+                    handler.sendSynchronousMessage(message);
+                    System.out.println("Mensagem pendente entregue: " + sender + " -> " + userName);
                 }
             }
         }
