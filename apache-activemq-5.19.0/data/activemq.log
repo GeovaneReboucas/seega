@@ -1046,3 +1046,82 @@
 2025-08-03 11:41:07,182 | INFO  | For help or more information please see: http://activemq.apache.org | org.apache.activemq.broker.BrokerService | main
 2025-08-03 11:41:10,773 | INFO  | ActiveMQ WebConsole available at http://127.0.0.1:8161/ | org.apache.activemq.web.WebConsoleStarter | main
 2025-08-03 11:41:10,774 | INFO  | ActiveMQ Jolokia REST API available at http://127.0.0.1:8161/api/jolokia/ | org.apache.activemq.web.WebConsoleStarter | main
+2025-08-03 12:33:27,223 | INFO  | Using Persistence Adapter: KahaDBPersistenceAdapter[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\kahadb] | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:27,233 | INFO  | Starting Persistence Adapter: KahaDBPersistenceAdapter[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\kahadb] | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:27,259 | INFO  | Starting KahaDBStore | org.apache.activemq.store.kahadb.KahaDBStore | main
+2025-08-03 12:33:27,260 | INFO  | Opening MessageDatabase | org.apache.activemq.store.kahadb.MessageDatabase | main
+2025-08-03 12:33:27,525 | INFO  | Starting Temp Data Store | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:27,526 | INFO  | PListStore:[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\localhost\tmp_storage] started | org.apache.activemq.store.kahadb.plist.PListStoreImpl | main
+2025-08-03 12:33:27,526 | INFO  | Starting Job Scheduler Store | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:27,527 | INFO  | Persistence Adapter successfully started | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:27,699 | INFO  | Apache ActiveMQ 5.19.0 (localhost, ID:Geovane-51216-1754235207549-0:1) is starting | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:27,734 | INFO  | Listening for connections at: tcp://Geovane:61616?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 12:33:27,735 | INFO  | Connector openwire started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 12:33:27,740 | INFO  | Listening for connections at: amqp://Geovane:5672?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 12:33:27,741 | INFO  | Connector amqp started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 12:33:27,747 | INFO  | Listening for connections at: stomp://Geovane:61613?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 12:33:27,747 | INFO  | Connector stomp started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 12:33:27,754 | INFO  | Listening for connections at: mqtt://Geovane:1883?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 12:33:27,755 | INFO  | Connector mqtt started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 12:33:27,763 | INFO  | Starting Jetty server | org.apache.activemq.transport.WebTransportServerSupport | main
+2025-08-03 12:33:27,840 | INFO  | Creating Jetty connector | org.apache.activemq.transport.WebTransportServerSupport | main
+2025-08-03 12:33:27,924 | WARN  | ServletContext@o.e.j.s.ServletContextHandler@288f173f{/,null,STARTING} has uncovered http methods for path: / | org.eclipse.jetty.security.SecurityHandler | main
+2025-08-03 12:33:28,012 | INFO  | Listening for connections at ws://Geovane:61614?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.ws.WSTransportServer | main
+2025-08-03 12:33:28,012 | INFO  | Connector ws started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 12:33:28,013 | INFO  | Apache ActiveMQ 5.19.0 (localhost, ID:Geovane-51216-1754235207549-0:1) started | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:28,014 | INFO  | For help or more information please see: http://activemq.apache.org | org.apache.activemq.broker.BrokerService | main
+2025-08-03 12:33:29,289 | INFO  | ActiveMQ WebConsole available at http://127.0.0.1:8161/ | org.apache.activemq.web.WebConsoleStarter | main
+2025-08-03 12:33:29,290 | INFO  | ActiveMQ Jolokia REST API available at http://127.0.0.1:8161/api/jolokia/ | org.apache.activemq.web.WebConsoleStarter | main
+2025-08-03 14:01:31,991 | INFO  | Using Persistence Adapter: KahaDBPersistenceAdapter[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\kahadb] | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:32,005 | INFO  | Starting Persistence Adapter: KahaDBPersistenceAdapter[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\kahadb] | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:32,033 | INFO  | Starting KahaDBStore | org.apache.activemq.store.kahadb.KahaDBStore | main
+2025-08-03 14:01:32,034 | INFO  | Opening MessageDatabase | org.apache.activemq.store.kahadb.MessageDatabase | main
+2025-08-03 14:01:32,277 | INFO  | Starting Temp Data Store | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:32,279 | INFO  | PListStore:[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\localhost\tmp_storage] started | org.apache.activemq.store.kahadb.plist.PListStoreImpl | main
+2025-08-03 14:01:32,279 | INFO  | Starting Job Scheduler Store | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:32,279 | INFO  | Persistence Adapter successfully started | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:32,445 | INFO  | Apache ActiveMQ 5.19.0 (localhost, ID:Geovane-55749-1754240492300-0:1) is starting | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:32,483 | INFO  | Listening for connections at: tcp://Geovane:61616?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 14:01:32,484 | INFO  | Connector openwire started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 14:01:32,491 | INFO  | Listening for connections at: amqp://Geovane:5672?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 14:01:32,492 | INFO  | Connector amqp started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 14:01:32,498 | INFO  | Listening for connections at: stomp://Geovane:61613?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 14:01:32,499 | INFO  | Connector stomp started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 14:01:32,505 | INFO  | Listening for connections at: mqtt://Geovane:1883?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 14:01:32,506 | INFO  | Connector mqtt started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 14:01:32,515 | INFO  | Starting Jetty server | org.apache.activemq.transport.WebTransportServerSupport | main
+2025-08-03 14:01:32,601 | INFO  | Creating Jetty connector | org.apache.activemq.transport.WebTransportServerSupport | main
+2025-08-03 14:01:32,692 | WARN  | ServletContext@o.e.j.s.ServletContextHandler@288f173f{/,null,STARTING} has uncovered http methods for path: / | org.eclipse.jetty.security.SecurityHandler | main
+2025-08-03 14:01:32,789 | INFO  | Listening for connections at ws://Geovane:61614?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.ws.WSTransportServer | main
+2025-08-03 14:01:32,790 | INFO  | Connector ws started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 14:01:32,791 | INFO  | Apache ActiveMQ 5.19.0 (localhost, ID:Geovane-55749-1754240492300-0:1) started | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:32,792 | INFO  | For help or more information please see: http://activemq.apache.org | org.apache.activemq.broker.BrokerService | main
+2025-08-03 14:01:33,964 | INFO  | ActiveMQ WebConsole available at http://127.0.0.1:8161/ | org.apache.activemq.web.WebConsoleStarter | main
+2025-08-03 14:01:33,964 | INFO  | ActiveMQ Jolokia REST API available at http://127.0.0.1:8161/api/jolokia/ | org.apache.activemq.web.WebConsoleStarter | main
+2025-08-03 16:18:04,484 | WARN  | Transport Connection to: tcp://192.168.15.42:50360 failed: Unsupported or invalid protocol version | org.apache.activemq.broker.TransportConnection.Transport | ActiveMQ Transport: tcp:///192.168.15.42:50360@1883
+2025-08-03 18:48:11,393 | INFO  | Using Persistence Adapter: KahaDBPersistenceAdapter[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\kahadb] | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:11,415 | INFO  | Starting Persistence Adapter: KahaDBPersistenceAdapter[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\kahadb] | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:11,465 | INFO  | Starting KahaDBStore | org.apache.activemq.store.kahadb.KahaDBStore | main
+2025-08-03 18:48:11,467 | INFO  | Opening MessageDatabase | org.apache.activemq.store.kahadb.MessageDatabase | main
+2025-08-03 18:48:12,377 | INFO  | Starting Temp Data Store | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:12,378 | INFO  | PListStore:[C:\Users\geova\Documents\workspace\ppd\seega\apache-activemq-5.19.0\data\localhost\tmp_storage] started | org.apache.activemq.store.kahadb.plist.PListStoreImpl | main
+2025-08-03 18:48:12,380 | INFO  | Starting Job Scheduler Store | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:12,381 | INFO  | Persistence Adapter successfully started | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:12,593 | INFO  | Apache ActiveMQ 5.19.0 (localhost, ID:Geovane-56729-1754257692415-0:1) is starting | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:12,644 | INFO  | Listening for connections at: tcp://Geovane:61616?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 18:48:12,647 | INFO  | Connector openwire started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 18:48:12,655 | INFO  | Listening for connections at: amqp://Geovane:5672?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 18:48:12,655 | INFO  | Connector amqp started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 18:48:12,665 | INFO  | Listening for connections at: stomp://Geovane:61613?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 18:48:12,666 | INFO  | Connector stomp started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 18:48:12,673 | INFO  | Listening for connections at: mqtt://Geovane:1883?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.TransportServerThreadSupport | main
+2025-08-03 18:48:12,674 | INFO  | Connector mqtt started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 18:48:12,688 | INFO  | Starting Jetty server | org.apache.activemq.transport.WebTransportServerSupport | main
+2025-08-03 18:48:12,783 | INFO  | Creating Jetty connector | org.apache.activemq.transport.WebTransportServerSupport | main
+2025-08-03 18:48:12,895 | WARN  | ServletContext@o.e.j.s.ServletContextHandler@288f173f{/,null,STARTING} has uncovered http methods for path: / | org.eclipse.jetty.security.SecurityHandler | main
+2025-08-03 18:48:13,016 | INFO  | Listening for connections at ws://Geovane:61614?maximumConnections=1000&wireFormat.maxFrameSize=104857600 | org.apache.activemq.transport.ws.WSTransportServer | main
+2025-08-03 18:48:13,018 | INFO  | Connector ws started | org.apache.activemq.broker.TransportConnector | main
+2025-08-03 18:48:13,019 | INFO  | Apache ActiveMQ 5.19.0 (localhost, ID:Geovane-56729-1754257692415-0:1) started | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:13,020 | INFO  | For help or more information please see: http://activemq.apache.org | org.apache.activemq.broker.BrokerService | main
+2025-08-03 18:48:15,094 | INFO  | ActiveMQ WebConsole available at http://127.0.0.1:8161/ | org.apache.activemq.web.WebConsoleStarter | main
+2025-08-03 18:48:15,094 | INFO  | ActiveMQ Jolokia REST API available at http://127.0.0.1:8161/api/jolokia/ | org.apache.activemq.web.WebConsoleStarter | main

@@ -376,13 +376,10 @@ public class ChatClientGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Valores invalidos para latitude ou longitude.");
         }
 
-        // Atualizar Status - Esta é a parte crítica
+        // Atualizar Status
         writer.println("UPDATE_STATUS|" + isOnline);
         
-        // Se estiver voltando para online, forçar o servidor a verificar mensagens pendentes
-        if (isOnline) {
-            writer.println("CHECK_PENDING|" + loggedInUser);
-        }
+        // Removido o CHECK_PENDING forçado aqui
 
         // Atualizar Raio
         try {

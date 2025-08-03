@@ -28,6 +28,13 @@ public class MessageQueueManager {
         }
     }
 
+    public void sendAsyncMessages(String queueName, List<String> messages) throws JMSException {
+        MessageProducer producer = getOrCreateProducer(queueName);
+        for (String message : messages) {
+            producer.send(message);
+        }
+    }
+
     public List<String> receiveAsyncMessages(String userName) {
         String queueName = "user." + userName;
         try {
