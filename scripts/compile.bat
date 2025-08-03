@@ -68,11 +68,6 @@ echo.
 if %FILE_COUNT% equ %SUCCESS_COUNT% (
     echo [STATUS] COMPILAÇÃO CONCLUÍDA COM SUCESSO!
     echo.
-    echo [INSTRUÇÕES] Para executar o sistema:
-    echo 1. Inicie o ActiveMQ: "%SCRIPTS_DIR%\start-activemq.bat"
-    echo 2. Execute o servidor: "%SCRIPTS_DIR%\run-server.bat"
-    echo 3. Execute o administrador: "%SCRIPTS_DIR%\run-admin.bat"
-    echo 4. Execute clientes: "%SCRIPTS_DIR%\run-client.bat"
 ) else (
     set /a FAIL_COUNT=FILE_COUNT - SUCCESS_COUNT
     echo [STATUS] COMPILAÇÃO COM ERROS (%FAIL_COUNT% falhas)
