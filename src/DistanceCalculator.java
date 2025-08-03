@@ -1,7 +1,3 @@
-// package com.locationchat.util;
-
-// import model.Location;
-
 public class DistanceCalculator {
     
     private static final double EARTH_RADIUS_KM = 6371.0;
@@ -29,8 +25,8 @@ public class DistanceCalculator {
 
     /**
      * Verifica se dois usuários estão dentro do raio de comunicação
-     * @param user1 Primeiro usuário
-     * @param user2 Segundo usuário
+     * @param location1 Primeira localização
+     * @param location2 Segunda localização
      * @param radius Raio de comunicação em quilômetros
      * @return true se estão dentro do raio, false caso contrário
      */

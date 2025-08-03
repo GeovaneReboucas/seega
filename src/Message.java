@@ -1,5 +1,3 @@
-// package model;
-
 import java.time.LocalDateTime;
 
 public class Message {
@@ -45,11 +43,12 @@ public class Message {
     @Override
     public String toString() {
         return "Message{" +
-                "content='" + content + '\'' +
-                ", sender='" + sender + '\'' +
-                ", recipient='" + recipient + '\'' +
-                ", type=" + type +
-                ", timestamp=" + timestamp +
-                '}';
+               "content='" + content + '\'' +
+               ", sender='" + sender + '\'' +
+               ", recipient='" + recipient + '\'' +
+               ", type=" + type +
+               ", timestamp=" + timestamp +
+               '}';
     }
 }
+

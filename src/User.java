@@ -1,5 +1,3 @@
-// package com.locationchat.model;
-
 import java.util.ArrayList;
 import java.util.List;
 

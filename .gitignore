@@ -1,0 +1,5 @@
+apache-activemq-5.19.0/data/kahadb/*
+
+apache-activemq-5.19.0/data/temp/*
+
+apache-activemq-5.19.0/data/audit.log

@@ -1,9 +1,3 @@
-// package com.locationchat.server;
-
-// import model.User;
-// import model.Message;
-// import model.Location;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
@@ -31,6 +25,7 @@ public class ClientHandler implements Runnable {
         try {
             String inputLine;
             while ((inputLine = reader.readLine()) != null) {
+                System.out.println("DEBUG: Comando recebido de " + userName + ": " + inputLine);
                 processCommand(inputLine);
             }
         } catch (IOException e) {
@@ -56,6 +51,7 @@ public class ClientHandler implements Runnable {
                     this.userName = name;
                     server.registerUser(user, this);
                     writer.println("LOGIN_SUCCESS|" + name);
+                    System.out.println("DEBUG: Login processado para " + name);
                 }
                 break;
                 
@@ -70,6 +66,7 @@ public class ClientHandler implements Runnable {
                     
                     Message message = new Message(content, userName, recipient, type);
                     server.sendMessage(message);
+                    System.out.println("DEBUG: Mensagem processada de " + userName + " para " + recipient);
                 }
                 break;
                 
@@ -78,12 +75,14 @@ public class ClientHandler implements Runnable {
                     double lat = Double.parseDouble(parts[1]);
                     double lon = Double.parseDouble(parts[2]);
                     server.updateLocation(userName, new Location(lat, lon));
+                    System.out.println("DEBUG: Localização atualizada para " + userName);
                 }
                 break;
                 
             case "UPDATE_STATUS":
                 if (parts.length >= 2) {
                     boolean isOnline = Boolean.parseBoolean(parts[1]);
+                    System.out.println("DEBUG: UPDATE_STATUS recebido para " + userName + " com valor: " + parts[1] + " (parsed: " + isOnline + ")");
                     server.updateStatus(userName, isOnline);
                 }
                 break;
@@ -92,6 +91,7 @@ public class ClientHandler implements Runnable {
                 if (parts.length >= 2) {
                     double newRadius = Double.parseDouble(parts[1]);
                     server.updateCommunicationRadius(userName, newRadius);
+                    System.out.println("DEBUG: Raio atualizado para " + userName);
                 }
                 break;
                 
@@ -123,7 +123,9 @@ public class ClientHandler implements Runnable {
         if (userName != null) {
             User user = server.getRegisteredUser(userName);
             if (user != null) {
-                server.unregisterUser(user);
+                // Ao desconectar, definimos o status como offline
+                server.updateStatus(user.getName(), false);
+                System.out.println("DEBUG: Usuário " + userName + " desconectado e marcado como offline.");
             }
         }
         try {
