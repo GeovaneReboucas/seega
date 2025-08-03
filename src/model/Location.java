@@ -1,4 +1,4 @@
-// package com.locationchat.model;
+package model;
 
 public class Location {
     private double latitude;

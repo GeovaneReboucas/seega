@@ -17,6 +17,6 @@ echo [CONFIGURAÇÃO]
 echo Classpath: %CLASSPATH%
 echo.
 echo [INICIANDO SERVIDOR]
-java -cp "%CLASSPATH%" Server
+java -cp "%CLASSPATH%" server.Server
 
 pause

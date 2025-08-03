@@ -1,3 +1,5 @@
+package client;
+
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -11,7 +13,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Vector;
 
 public class ChatClientGUI extends JFrame {
     private JTextField usernameField, latitudeField, longitudeField, radiusField;

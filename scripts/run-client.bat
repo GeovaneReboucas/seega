@@ -17,6 +17,6 @@ echo [CONFIGURAÇÃO]
 echo Classpath: %CLASSPATH%
 echo.
 echo [INICIANDO SERVIDOR]
-java -cp "%CLASSPATH%" ChatClientGUI
+java -cp "%CLASSPATH%" client.ChatClientGUI
 
 pause

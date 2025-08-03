@@ -1,6 +1,5 @@
-// package com.locationchat.mq;
+package mq;
 
-// import model.Message;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 

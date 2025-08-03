@@ -1,3 +1,5 @@
+package server;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,7 +9,11 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.jms.JMSException;
+import model.Location;
+import model.Message;
+import model.User;
+import mq.MessageQueueManager;
+import util.DistanceCalculator;
 
 public class Server {
     private static final int PORT = 5555;

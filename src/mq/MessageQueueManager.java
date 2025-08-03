@@ -1,4 +1,9 @@
+package mq;
+
+import model.Message;
+
 import javax.jms.JMSException;
+
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;

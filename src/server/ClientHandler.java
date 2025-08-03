@@ -1,6 +1,12 @@
+package server;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
+
+import model.Location;
+import model.Message;
+import model.User;
 
 public class ClientHandler implements Runnable {
     private Socket clientSocket;

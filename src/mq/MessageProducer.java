@@ -1,3 +1,5 @@
+package mq;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 
