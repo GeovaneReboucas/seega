@@ -47,20 +47,18 @@ public class ClientHandler implements Runnable {
 
         switch (action) {
             case "LOGIN":
-                if (parts.length >= 4) { // Agora são 4 partes (sem o status)
+                if (parts.length >= 4) {
                     String name = parts[1];
                     double lat = Double.parseDouble(parts[2]);
                     double lon = Double.parseDouble(parts[3]);
                     double radius = Double.parseDouble(parts[4]);
                     
-                    // Sempre cria como online
                     User user = new User(name, new Location(lat, lon), true, radius);
                     this.userName = name;
                     server.registerUser(user, this);
                     writer.println("LOGIN_SUCCESS|" + name);
                     System.out.println("DEBUG: Login processado para " + name);
                     
-                    // Forçar atualização de status para online
                     server.updateStatus(name, true);
                 }
                 break;
@@ -123,7 +121,6 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendSynchronousMessage(Message message) {
-        // Inclui o tipo da mensagem no envio
         writer.println("MESSAGE|" + 
                     message.getSender() + "|" + 
                     message.getContent() + "|" + 
@@ -150,7 +147,6 @@ public class ClientHandler implements Runnable {
         if (userName != null) {
             User user = server.getRegisteredUser(userName);
             if (user != null) {
-                // Ao desconectar, definimos o status como offline
                 server.updateStatus(user.getName(), false);
                 System.out.println("DEBUG: Usuário " + userName + " desconectado e marcado como offline.");
             }
@@ -158,7 +154,7 @@ public class ClientHandler implements Runnable {
         try {
             if (reader != null) reader.close();
             if (writer != null) writer.close();
-            if (clientSocket != null && !clientSocket.isClosed()) clientSocket.close(); // Verifica se o socket não está fechado antes de tentar fechar
+            if (clientSocket != null && !clientSocket.isClosed()) clientSocket.close();
         } catch (IOException e) {
             System.err.println("Erro ao fechar conexão: " + e.getMessage());
         }

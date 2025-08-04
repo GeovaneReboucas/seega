@@ -47,11 +47,10 @@ public class Server {
     }
 
     public synchronized void registerUser(User user, ClientHandler handler) {
-        // Se o usuario já está registrado, atualiza o handler para o novo socket
         if (registeredUsers.containsKey(user.getName())) {
             User existingUser = registeredUsers.get(user.getName());
             existingUser.setOnline(true);
-            onlineUsers.put(user.getName(), handler); // Atualiza o handler para o novo socket
+            onlineUsers.put(user.getName(), handler);
             System.out.println("Usuario " + user.getName() + " reconectado. Handler atualizado: " + handler);
         } else {
             onlineUsers.put(user.getName(), handler);
@@ -60,13 +59,10 @@ public class Server {
             System.out.println("Novo usuario " + user.getName() + " online. Handler: " + handler);
         }
         updateContactsForOnlineUsers();
-        // Ao logar, verificar se há mensagens pendentes
         sendPendingMessages(user.getName());
     }
 
     public void unregisterUser(User user) {
-        // Não remove do onlineUsers aqui, pois o updateStatus já lida com isso
-        // onlineUsers.remove(user.getName()); 
         if (registeredUsers.containsKey(user.getName())) {
             registeredUsers.get(user.getName()).setOnline(false);
         }
@@ -85,14 +81,12 @@ public class Server {
             return;
         }
 
-        // Sempre envia para a fila se o remetente estiver offline
         if (!senderUser.isOnline()) {
             mqManager.sendAsyncMessage(message);
             System.out.println("Remetente offline. Mensagem enfileirada: " + senderName + " -> " + recipientName);
             return;
         }
 
-        // Se chegou aqui, o remetente está online
         boolean recipientOnline = recipientUser.isOnline();
         
         // Verifica se o destinatário está dentro do raio do remetente (para visibilidade)
@@ -118,7 +112,6 @@ public class Server {
                 System.out.println("Mensagem sincrona enviada: " + senderName + " -> " + recipientName);
             }
         } else {
-            // Comunicação assíncrona
             mqManager.sendAsyncMessage(message);
             System.out.println("Mensagem enfileirada. Motivo: " + 
                             (!recipientOnline ? "Destinatario offline" : 
@@ -152,10 +145,7 @@ public class Server {
             System.out.println("Status de " + userName + " atualizado para " + (isOnline ? "Online" : "Offline"));
             
             if (isOnline) {
-                // Verifica mensagens pendentes para este usuário
                 sendPendingMessages(userName);
-                
-                // Verifica mensagens de outros usuários que podem ver este usuário
                 checkAndDeliverPendingMessages();
             }
             
@@ -186,7 +176,6 @@ public class Server {
                         handler.sendSynchronousMessage(message);
                         System.out.println("Mensagem pendente entregue (síncrona): " + sender + " -> " + userName);
                     } else {
-                        // Mantém na fila se não houver visibilidade mútua
                         mqManager.sendAsyncMessage(new Message(content, sender, userName, Message.MessageType.ASYNCHRONOUS));
                     }
                 }
@@ -200,12 +189,8 @@ public class Server {
             user.setCommunicationRadius(newRadius);
             System.out.println("Raio de comunicacao de " + userName + " atualizado para " + newRadius + " km.");
             
-            // Verifica mensagens pendentes para este usuário
             sendPendingMessages(userName);
-            
-            // Verifica mensagens de outros usuários que podem agora ver este usuário
             checkAndDeliverPendingMessages();
-            
             updateContactsForOnlineUsers();
         }
     }
@@ -219,14 +204,12 @@ public class Server {
                 
                 for (User otherUser : registeredUsers.values()) {
                     if (!currentUser.equals(otherUser)) {
-                        // Verifica se está dentro do raio do usuário atual
                         boolean withinCurrentUserRadius = DistanceCalculator.isWithinRadius(
                             currentUser.getLocation(), 
                             otherUser.getLocation(), 
                             currentUser.getCommunicationRadius()
                         );
                         
-                        // Cria cópia do usuário com status ajustado
                         User contactCopy = new User(otherUser.getName(), 
                                                 otherUser.getLocation(),
                                                 isMutuallyVisible(currentUser, otherUser),

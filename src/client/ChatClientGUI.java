@@ -30,13 +30,13 @@ public class ChatClientGUI extends JFrame {
     private DefaultListModel<String> nearbyContactsListModel;
     private JList<String> chatHistoryContactsList;
     private DefaultListModel<String> chatHistoryContactsListModel;
-    private Map<String, StringBuilder> chatHistories; // Armazena o histórico de chat por contato
+    private Map<String, StringBuilder> chatHistories;
 
-    private JPanel dynamicChatPanel; // Painel para exibir o chat do contato selecionado
-    private JTextArea currentChatArea; // Area de texto do chat atual
-    private JTextField currentMessageInput; // Campo de entrada de mensagem do chat atual
-    private JButton currentSendButton; // Botão de envio do chat atual
-    private String currentChatContact; // Contato com o qual o chat está aberto
+    private JPanel dynamicChatPanel; 
+    private JTextArea currentChatArea; 
+    private JTextField currentMessageInput; 
+    private JButton currentSendButton; 
+    private String currentChatContact;
     private JLabel userHeaderLabel;
 
     public ChatClientGUI() {
@@ -61,9 +61,8 @@ public class ChatClientGUI extends JFrame {
 
         // Cria todos os painéis necessários
         createLoginPanel();
-        createMainPanel(); // Isso criará o settingsPanel também
+        createMainPanel();
         
-        // Mostra inicialmente a tela de login
         add(loginPanel, BorderLayout.CENTER);
         
         setVisible(true);
@@ -77,35 +76,30 @@ public class ChatClientGUI extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Nome do usuário
         gbc.gridx = 0; gbc.gridy = 0;
         loginPanel.add(new JLabel("Nome do Usuário:"), gbc);
         gbc.gridx = 1;
         usernameField = new JTextField("", 15);
         loginPanel.add(usernameField, gbc);
 
-        // Latitude
         gbc.gridx = 0; gbc.gridy = 1;
         loginPanel.add(new JLabel("Latitude:"), gbc);
         gbc.gridx = 1;
         latitudeField = new JTextField("-23.550520", 15);
         loginPanel.add(latitudeField, gbc);
 
-        // Longitude
         gbc.gridx = 0; gbc.gridy = 2;
         loginPanel.add(new JLabel("Longitude:"), gbc);
         gbc.gridx = 1;
         longitudeField = new JTextField("-46.633308", 15);
         loginPanel.add(longitudeField, gbc);
 
-        // Raio de comunicação (agora editável)
         gbc.gridx = 0; gbc.gridy = 3;
         loginPanel.add(new JLabel("Raio de Comunicação (km):"), gbc);
         gbc.gridx = 1;
         radiusField = new JTextField("10.0", 15);
         loginPanel.add(radiusField, gbc);
 
-        // Botão de login
         gbc.gridx = 0; gbc.gridy = 4;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -122,17 +116,14 @@ public class ChatClientGUI extends JFrame {
     private void createMainPanel() {
         mainPanel = new JPanel(new BorderLayout());
         
-        // Criar o painel com abas
         tabbedPane = new JTabbedPane();
         
-        // Aba do Chat
         JPanel chatPanel = createChatPanel();
         tabbedPane.addTab("Chat", chatPanel);
         
-        // Aba de Configurações (garante que settingsPanel é criado)
         settingsPanel = new JPanel(new GridBagLayout());
         createSettingsPanel();
-        tabbedPane.addTab("Configurações", settingsPanel);
+        tabbedPane.addTab("Configuracoes", settingsPanel);
         
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
     }
@@ -140,12 +131,10 @@ public class ChatClientGUI extends JFrame {
     private JPanel createChatPanel() {
         JPanel chatPanel = new JPanel(new BorderLayout());
         
-        // Painel de Contatos
         JPanel contactsPanel = new JPanel(new GridLayout(2, 1, 0, 10));
-        contactsPanel.setPreferredSize(new Dimension(200, 0)); // Largura fixa para a lista de contatos
+        contactsPanel.setPreferredSize(new Dimension(200, 0)); 
         contactsPanel.setBorder(BorderFactory.createTitledBorder("Contatos"));
 
-        // Contatos Próximos
         nearbyContactsListModel = new DefaultListModel<>();
         nearbyContactsList = new JList<>(nearbyContactsListModel);
         nearbyContactsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -156,7 +145,6 @@ public class ChatClientGUI extends JFrame {
                 if (!e.getValueIsAdjusting()) {
                     String selectedContact = nearbyContactsList.getSelectedValue();
                     if (selectedContact != null) {
-                        // Remove o (Online) ou (Offline) do nome do contato
                         selectedContact = selectedContact.split(" \\(")[0];
                         openChatPanel(selectedContact);
                     }
@@ -165,7 +153,6 @@ public class ChatClientGUI extends JFrame {
         });
         contactsPanel.add(new JScrollPane(nearbyContactsList));
 
-        // Histórico de Mensagens
         chatHistoryContactsListModel = new DefaultListModel<>();
         chatHistoryContactsList = new JList<>(chatHistoryContactsListModel);
         chatHistoryContactsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -185,7 +172,6 @@ public class ChatClientGUI extends JFrame {
 
         chatPanel.add(contactsPanel, BorderLayout.WEST);
 
-        // Painel de chat dinâmico (inicialmente vazio ou com mensagem de boas-vindas)
         dynamicChatPanel = new JPanel(new BorderLayout());
         dynamicChatPanel.setBorder(BorderFactory.createTitledBorder("Selecione um contato para conversar"));
         chatPanel.add(dynamicChatPanel, BorderLayout.CENTER);
@@ -201,7 +187,6 @@ public class ChatClientGUI extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Nome do usuário (somente leitura)
         gbc.gridx = 0; gbc.gridy = 0;
         settingsPanel.add(new JLabel("Nome do Usuario:"), gbc);
         gbc.gridx = 1;
@@ -210,35 +195,30 @@ public class ChatClientGUI extends JFrame {
         usernameDisplayField.setBackground(Color.LIGHT_GRAY);
         settingsPanel.add(usernameDisplayField, gbc);
 
-        // Latitude (editável)
         gbc.gridx = 0; gbc.gridy = 1;
         settingsPanel.add(new JLabel("Latitude:"), gbc);
         gbc.gridx = 1;
         JTextField latitudeUpdateField = new JTextField(15);
         settingsPanel.add(latitudeUpdateField, gbc);
 
-        // Longitude (editável)
         gbc.gridx = 0; gbc.gridy = 2;
         settingsPanel.add(new JLabel("Longitude:"), gbc);
         gbc.gridx = 1;
         JTextField longitudeUpdateField = new JTextField(15);
         settingsPanel.add(longitudeUpdateField, gbc);
 
-        // Status Online/Offline (editável)
         gbc.gridx = 0; gbc.gridy = 3;
         settingsPanel.add(new JLabel("Status:"), gbc);
         gbc.gridx = 1;
-        JCheckBox statusUpdateCheckbox = new JCheckBox("Online", true); // Inicia marcado
+        JCheckBox statusUpdateCheckbox = new JCheckBox("Online", true);
         settingsPanel.add(statusUpdateCheckbox, gbc);
 
-        // Raio de comunicação (editável)
         gbc.gridx = 0; gbc.gridy = 4;
         settingsPanel.add(new JLabel("Raio de Comunicacao (km):"), gbc);
         gbc.gridx = 1;
         JTextField radiusUpdateField = new JTextField(15);
         settingsPanel.add(radiusUpdateField, gbc);
 
-        // Botão de atualização consolidado
         gbc.gridx = 0; gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -257,7 +237,6 @@ public class ChatClientGUI extends JFrame {
         });
         settingsPanel.add(updateInfoButton, gbc);
         
-        // Armazenar referências para os campos de configuração
         settingsPanel.putClientProperty("usernameField", usernameDisplayField);
         settingsPanel.putClientProperty("latitudeField", latitudeUpdateField);
         settingsPanel.putClientProperty("longitudeField", longitudeUpdateField);
@@ -267,7 +246,6 @@ public class ChatClientGUI extends JFrame {
 
     private void connectToServer() {
         try {
-            // Se o socket já existe e está conectado, fecha-o antes de criar um novo
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
@@ -306,21 +284,19 @@ public class ChatClientGUI extends JFrame {
         }
 
         loggedInUser = username;
-        // Envia true como status online fixo
         writer.println("LOGIN|" + username + "|" + lat + "|" + lon + "|" + radius);
     }
 
     private void updateUserHeader() {
         if (loggedInUser != null) {
             userHeaderLabel.setText("Usuario: " + loggedInUser);
-            userHeaderLabel.setIcon(new ImageIcon("user_icon.png")); // Opcional: adicione um ícone
+            userHeaderLabel.setIcon(new ImageIcon("user_icon.png"));
         }
     }
 
     private void switchToMainInterface() {
         remove(loginPanel);
         
-        // Garante que os painéis principais estão criados
         if (mainPanel == null) {
             createMainPanel();
         }
@@ -328,7 +304,6 @@ public class ChatClientGUI extends JFrame {
         add(mainPanel, BorderLayout.CENTER);
         updateUserHeader();
         
-        // Só tenta acessar os campos se settingsPanel foi criado
         if (settingsPanel != null) {
             JTextField usernameDisplayField = (JTextField) settingsPanel.getClientProperty("usernameField");
             JTextField latitudeUpdateField = (JTextField) settingsPanel.getClientProperty("latitudeField");
@@ -359,10 +334,8 @@ public class ChatClientGUI extends JFrame {
         String messageType = "SYNC";
         writer.println("SEND_MESSAGE|" + content + "|" + recipient + "|" + messageType);
         
-        // Adiciona a mensagem ao histórico do chat
         appendMessageToChatHistory(recipient, "Voce: " + content + "\n");
         
-        // Atualiza a área de chat se for o contato atual
         if (currentChatArea != null && recipient.equals(currentChatContact)) {
             currentChatArea.append("Voce: " + content + "\n");
         }
@@ -371,7 +344,6 @@ public class ChatClientGUI extends JFrame {
     private void updateAllUserInfo(String lat, String lon, boolean isOnline, String radius) {
         if (!isLoggedIn) return;
 
-        // Atualizar Localização
         try {
             Double.parseDouble(lat);
             Double.parseDouble(lon);
@@ -380,12 +352,8 @@ public class ChatClientGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Valores invalidos para latitude ou longitude.");
         }
 
-        // Atualizar Status
         writer.println("UPDATE_STATUS|" + isOnline);
         
-        // Removido o CHECK_PENDING forçado aqui
-
-        // Atualizar Raio
         try {
             Double.parseDouble(radius);
             writer.println("UPDATE_RADIUS|" + radius);
@@ -404,7 +372,6 @@ public class ChatClientGUI extends JFrame {
         } catch (IOException e) {
             if (isLoggedIn) {
                 SwingUtilities.invokeLater(() -> {
-                    // Não mais escreve no chatArea principal
                 });
             }
             disconnect();
@@ -419,7 +386,6 @@ public class ChatClientGUI extends JFrame {
             switch (command) {
                 case "LOGIN_SUCCESS":
                     switchToMainInterface();
-                    // Não mais escreve no chatArea principal
                     break;
                 case "MESSAGE":
                     String sender = parts[1];
@@ -427,7 +393,6 @@ public class ChatClientGUI extends JFrame {
                     String timestamp = parts[3];
                     appendMessageToChatHistory(sender, sender + ": " + content + " (" + timestamp + ")\n");
                     
-                    // Se o chat com este remetente estiver aberto, atualiza a área de chat
                     if (currentChatArea != null && sender.equals(currentChatContact)) {
                         currentChatArea.append(sender + ": " + content + " (" + timestamp + ")\n");
                     }
@@ -461,7 +426,7 @@ public class ChatClientGUI extends JFrame {
 
     private void openChatPanel(String contactName) {
         currentChatContact = contactName;
-        dynamicChatPanel.removeAll(); // Limpa o painel anterior
+        dynamicChatPanel.removeAll(); 
         dynamicChatPanel.setBorder(BorderFactory.createTitledBorder("Chat com " + contactName));
 
         currentChatArea = new JTextArea();
